@@ -14,7 +14,15 @@
 
 
 
-## List of features:
+## List of features: 
+Some features are already present in our dataset, such as dependencies, lemma, POS tag, XPOS tags. 
+
+We propose to add the following features:
+- Predicate or not (binary?)
+- stem (as a lexical?)
+- stop word identification (as a lexical feature?)
+- Maybe add word embeddings?
+
 
 
 ## Choice of Machine learning algorithm:
