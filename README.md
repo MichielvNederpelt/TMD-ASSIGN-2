@@ -1,5 +1,10 @@
 # NLP technology-ASSIGN-2
 
+- Desiree Gerritsen (s2700295)
+- Tessel 
+- Michiel
+- Nihed
+
 ## Description of predicate and argument extraction:
 
 [ Tessel ] ?
