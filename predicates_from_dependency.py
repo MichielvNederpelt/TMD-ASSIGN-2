@@ -29,12 +29,18 @@ def get_root(sentence):
         if word.head <=0:
             return word
 
+
+
 def get_predicates(sentence):
     root = get_root(sentence)
     predicates = [root]
     for word in sentence.words:
-        if (word.deprel == 'xcomp' or word.deprel == 'advcl') and word.head == root.id:
-            predicates.append(word)
+        if word.deprel == 'xcomp'  or word.deprel == 'ccomp' or \
+           (word.deprel == 'conj' and word.pos == 'VERB') or word.deprel == 'parataxis' or word.deprel == 'advcl':
+            # if it is relation to another predicate
+            for preds in predicates:
+                if preds.id == word.head:
+                    predicates.append(word)
     return predicates
 
 def get_subject(predicate, sentence):
@@ -65,7 +71,7 @@ def get_substructure(head_of_struct, dep_struct):
     for word in dep_struct.words:
         if word.id == head_of_struct.id:
             subarg = get_all_dependents(word, dep_struct)
-            print([s.text for s in subarg])
+            #print([s.text for s in subarg])
             subargs.append(subarg)
     return subargs
 
@@ -122,7 +128,7 @@ def role_labeling(sentence):
 
 
 
-testfile = read_file(r'..\UP_English-EWT\en_ewt-up-dev_sents.conllu')[:100]
+testfile = read_file(r'..\UP_English-EWT\en_ewt-up-dev_sents.conllu')[10:15]
 #print(''.join(testfile))
 doc = parse_doc(''.join(testfile))
 
