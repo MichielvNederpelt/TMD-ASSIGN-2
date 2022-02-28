@@ -17,7 +17,7 @@ The argument classification task is a task which concernes the characterization 
 ## List of features: 
 Some features are already present in our dataset, such as dependencies, lemma, POS tag, XPOS tags. 
 
-Based on previous research, we propose to add the following features (references):
+Based on previous research, we propose to add the following features (Marquez et al, 2008):
 
 Lexical features:
 - Phrase type
@@ -36,4 +36,14 @@ Syntactic features:
 The system which is used is the Support Vector Machine (SVM), which is a supervised learning model. This model will 
 
 ## Describe the generation of training and test instances:
+
+
+
+
+
+
+
+
+### References:
+Màrquez, L., Carreras, X., Litkowski, K. C., & Stevenson, S. (2008). Semantic role labeling: an introduction to the special issue. Computational linguistics, 34(2), 145-159.
 
