@@ -1,4 +1,6 @@
-import csv 
+import csv
+
+from numpy import number 
 
 def read_in_conll_file(conll_file, delimiter='\t'):
     '''
@@ -49,12 +51,60 @@ def is_argument(predicate, row):
         return True
     return False
 
+def squeeze_gold(conll_file):
+    ''' Checks if the file contains any blank lines or lines starting with # (comments) and removes them'''
+    conll_object = read_in_conll_file(conll_file)
+    with open(conll_file[:-7] + '-squeeze.conllu', 'w', newline='', encoding='utf-8') as outputcsv:
+        csvwriter = csv.writer(outputcsv, delimiter='\t')
+        header = ['id', 'form', 'lemma', 'upos', 'xpos', 'feats', 'head', 'deprel', 'deps', 'predicate', 'pred_sense','arg_structs']
+        csvwriter.writerow(header)
+        next(conll_object)
+        #length = len(list(conll_object))
+        while conll_object != None:
+            list_of_sentence_rows = []
+            while True:
+                try:
+                    next_row = next(conll_object)
+                    if len(next_row) > 0 and next_row[0].startswith('#'):
+                        continue
+                    list_of_sentence_rows.append(next_row)
+                    if len(next_row) <=0:
+                        break
+                except StopIteration:
+                    return
+            
+            #print([row[1] for row in list_of_sentence_rows], '\n')
+            number_of_predicates = len(list_of_sentence_rows[0])-11
+            for i in range(1, number_of_predicates+1):
+                #print('predicate', i)
+                for row in list_of_sentence_rows:
+                    #print(row)
+                    if len(row) <= 0:
+                        csvwriter.writerow(row)
+                        continue
+                    try:
+                        target_col = row[10+i]
+                    except IndexError:
+                        if 'CopyOf=' in row[10]:
+                            idx = int(row[10].strip('CopyOf='))
+                            target_col = list_of_sentence_rows[idx][10+i]
+                        #print(i, len(row), number_of_predicates)
+                        #print(row, '\n')
+                        #for r in list_of_sentence_rows:
+                        #    print(r)
+                        #print('\n')
+                        
+                    #print(row[:10] + [target_col])
+                    extended_row = row[:10] + [target_col]
+                    csvwriter.writerow(extended_row)
+                #csvwriter.writerow('\n')
+
 def preprocess_args(conll_file):
     ''' Checks if the file contains any blank lines or lines starting with # (comments) and removes them'''
     conll_object = read_in_conll_file(conll_file)
     with open(conll_file[:-7] + '-args.conllu', 'w', newline='', encoding='utf-8') as outputcsv:
         csvwriter = csv.writer(outputcsv, delimiter='\t')
-        header = ['id', 'form', 'lemma', 'upos', 'xpos', 'feats', 'head', 'deprel', 'deps', 'predicate', 'pred_sense','arg_structs']
+        header = ['id', 'form', 'lemma', 'upos', 'xpos', 'feats', 'head', 'deprel', 'deps', 'misc', 'predicate', 'argument']
         csvwriter.writerow(header)
         next(conll_object)
         #length = len(list(conll_object))
@@ -106,7 +156,7 @@ def preprocess_predicates(conll_file):
     conll_object = read_in_conll_file(conll_file)
     with open(conll_file[:-7] + '-preds.conllu', 'w', newline='', encoding='utf-8') as outputcsv:
         csvwriter = csv.writer(outputcsv, delimiter='\t')
-        header = ['id', 'form', 'lemma', 'upos', 'xpos', 'feats', 'head', 'deprel', 'deps', 'predicate', 'pred_sense','arg_structs']
+        header = ['id', 'form', 'lemma', 'upos', 'xpos', 'feats', 'head', 'deprel', 'deps', 'misc','predicate']
         csvwriter.writerow(header)
         predicates_in_sentence = []
         for row in conll_object:
@@ -129,5 +179,6 @@ def preprocess_predicates(conll_file):
 path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train.conllu"
 
 pred_path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train-preds.conllu"
-preprocess_predicates(path)
-preprocess_args(pred_path)
+squeeze_gold(path)
+#preprocess_predicates(path)
+#preprocess_args(pred_path)
