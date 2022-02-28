@@ -1,9 +1,9 @@
 # NLP technology-ASSIGN-2
 
-- Desiree Gerritsen (s2700295)
-- Tessel 
-- Michiel
-- Nihed
+- Desiree Gerritsen
+- Tessel Wisman
+- Michiel van Nederpelt
+- Nihed Harrak
 
 ## Description of predicate and argument extraction:
 
@@ -20,15 +20,24 @@ Some features are already present in our dataset, such as dependencies, lemma, P
 Based on previous research, we propose to add the following features (Marquez et al, 2008):
 
 Lexical features:
-- Parent / direct headword
-- Children (if any) of each token
-- Constituent
+- Children of tokens
+In order to identify which possible arguments a token and possible predicate takes, we want to add children as a lexical feature. By using SpaCy, we labeled all possible children of a token, and added this to the dataset. 
+
 - Named entity labels
-- Word embeddings
+Labeling named entities can help to identify a role of a token such as person or organization. This information can help to identify easily is something is a specific argument, since arguments can denote an agent, or patient or location (Gübür, 2021).
+
+- Word embeddings ?
+
 
 Syntactic features:
-- Dependency label
+- Dependency labels
+This feature is already provided in the dataset, but it is a very useful feature that identifies which syntactic relationships between tokens and the root of a sentence. 
+
+- Path to root
+The path to the root is a feature that can show the relationship between tokens in a sentence and also shows a more deeper structure underlying sentences. A system can learn patterns that show possible and impossible paths which can be useful for predicting arguments. 
+
 - Syntactic N-grams
+This feature will provide the system with context and possible and impossible combinations of words sequences. 
 
 ## Choice of Machine learning algorithm:
 
@@ -40,4 +49,4 @@ The system which is used is the Support Vector Machine (SVM), which is a supervi
 - Hacioglu, K. (2004). Semantic role labeling using dependency trees. In COLING 2004: Proceedings of the 20th International Conference on Computational Linguistics (pp. 1273-1276).
 - Pradhan, S., Ward, W., Hacioglu, K., Martin, J. H., & Jurafsky, D. (2005, June). Semantic role labeling using different syntactic views. In Proceedings of the 43rd Annual Meeting of the Association for Computational Linguistics (ACL’05) (pp. 581-588).
 - Support vector machines: The linearly separable case. (z.d.). nlp stanford. Geraadpleegd op 28 februari 2022, van https://nlp.stanford.edu/IR-book/html/htmledition/support-vector-machines-the-linearly-separable-case-1.html
-
+- Gübür, K. T. (2021, 19 juli). Named Entity Recognition: Definition, Examples, and Guide. Holistic SEO. Geraadpleegd op 28 februari 2022, van https://www.holisticseo.digital/theoretical-seo/named-entity-recognition/
