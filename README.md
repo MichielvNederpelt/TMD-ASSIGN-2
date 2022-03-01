@@ -27,24 +27,21 @@ Some features are already present in our dataset, such as dependencies, lemma, P
 Based on previous research, we propose to add the following features (Marquez et al, 2008):
 
 Lexical features:
-- Children of tokens:
+- Children of token:
 In order to identify which possible arguments a token and possible predicate takes, we want to add children as a lexical feature. By using SpaCy, we labeled all possible children of a token, and added this to the dataset. 
+
+- Head of token:
+In order to identify which possible predicate a token has, we want to add the tokens head as a lexical feature. By using SpaCy, we labeled all possible heads of a token, and added this to the dataset. 
 
 - Named entity labels:
 Labeling named entities can help to identify a role of a token such as person or organization. This information can help to identify easily is something is a specific argument, since arguments can denote an agent, or patient or location (Gübür, 2021).
-
-- Word embeddings: ?
-
 
 Syntactic features:
 - Dependency labels:
 This feature is already provided in the dataset, but it is a very useful feature that identifies which syntactic relationships between tokens and the root of a sentence. 
 
-- Path to root:
-The path to the root is a feature that can show the relationship between tokens in a sentence and also shows a more deeper structure underlying sentences. A system can learn patterns that show possible and impossible paths which can be useful for predicting arguments. 
-
-- Syntactic N-grams:
-This feature will provide the system with context and possible and impossible combinations of words sequences. 
+- Dependency relation to head:
+This feature is already provided in the dataset. It is a useful feature which indicates how a token is related to the head. This way, the system can possibly identify patterns that are common and uncommon. 
 
 ## Choice of Machine learning algorithm:
 
