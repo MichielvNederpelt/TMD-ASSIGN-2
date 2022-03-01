@@ -13,7 +13,7 @@ In order to extract predicates, a rule-based approach was used by looking at dep
 
 Based on the predicates, arguments need to be identified. For the rule based approach, three classes of arguments were categorized. ARG0 is assigned to the subject, ARG1 is assigned to the object and ARG2 to other arguments such as time or date. We used the dependency label to identify these arguments. If the dependency label was 'nsubj', we assigned it ARG0. If the dependency label was 'obj', ARG1 was assigned. Lastly, for the dependency label 'obl' ARG2 was assigned. 
 
-This approach is a simple way of extracting predicates and arguments. Unfortunately, it isn't flawless since rules are hard coded which does not provide space for exceptions. We found that some predicates had a different dependency label, which results in overlooking that predicate. Another problem was labeling incorrect predicates or arguments based on the rules. Replicating this approach can be done by running ...py in the terminal.
+This approach is a simple way of extracting predicates and arguments. Unfortunately, it isn't flawless since rules are hard coded which does not provide space for exceptions. We found that some predicates had a different dependency label, which results in overlooking that predicate. Another problem was labeling incorrect predicates or arguments based on the rules. Replicating this approach can be done by running predicates_from_dependency.py.
 
 Due to these flaws, we choose to train the system on the gold labels provided in the dataset.
 
