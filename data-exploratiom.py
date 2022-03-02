@@ -1,7 +1,5 @@
 import csv
 
-from preprocessing import extract_sentences 
-
 def read_in_conll_file(conll_file, delimiter='\t'):
     '''
     THIS CODE WAS ADAPTED FROM THE ML4NLP COURSE
@@ -28,4 +26,16 @@ def copy_predicates(conll_file):
 
 path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train.conllu"
 
-n_predicates(path)
+with open(path, 'r', encoding='utf-8') as infile:
+    conll=infile.readlines()
+
+first = conll[:127935]
+second = conll[127935:]
+
+with open(r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train1.conllu", 'w', encoding='utf-8') as outfile:
+    for line in first:
+        outfile.write(line)
+
+with open(r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train2.conllu", 'w', encoding='utf-8') as outfile:
+    for line in second:
+        outfile.write(line)

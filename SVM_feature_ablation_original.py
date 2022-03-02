@@ -13,8 +13,8 @@ import csv
 
 from sklearn import metrics
 
-trainfile = r"C:/Users/desir/desktop/text_mining/nlp_technology/UP_English-EWT/en_ewt-up-train-parta-squeeze_try_combined.conllu"
-testfile = r"C:/Users/desir/desktop/text_mining/nlp_technology/UP_English-EWT/en_ewt-up-dev-squeeze_try.conllu"
+trainfile = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train-parta-squeeze_try_combined.conllu"
+testfile = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev-squeeze_try.conllu"
 
 # training_path_opt ='SEM-2012-SharedTask-CD-SCO-training-simple.v2.features.conll'
 # dev_path_opt = 'SEM-2012-SharedTask-CD-SCO-test-circle.features.conll'
@@ -111,18 +111,56 @@ def extract_features_and_gold_labels(conllfile, selected_features):
     #in this file, we have only one token as text, but this token can be '"', which then messes up the format. We set quotechar to a character that does not occur in our file
     csvreader = csv.reader(conllinput, delimiter='\t', quotechar='|')
     next(csvreader, None)
+    pred_arg_structures = dict()
+    i=0
     for row in csvreader:
         #I preprocessed the file so that all rows with instances should contain 6 values, the others are empty lines indicating the beginning of a sentence
         if len(row) > 0:
-            #structuring feature value pairs as key-value pairs in a dictionary
-            #the first column in the conll file represents tokens
-            feature_value = {}
-            for feature_name in selected_features:
-                row_index = feature_to_index.get(feature_name)
-                feature_value[feature_name] = row[row_index]
-            features.append(feature_value)
-            #The last column provides the gold label (= the correct answer). 
-            labels.append(row[-1])
+           # print(row[-1])
+            if row[-1] == 'PREDICATE':
+                if i not in pred_arg_structures.keys():
+                    pred_arg_structures[i] = {'P':row}
+                else: 
+                    pred_arg_structures[i].update({'P':row})
+                pred_arg_structures[i]['L'] = row[-1]
+            elif row[-1] != 'O':
+                if i not in pred_arg_structures.keys():
+                    pred_arg_structures[i] = {'A':[row]}
+                else: 
+                    if 'A' in pred_arg_structures[i].keys():
+                        pred_arg_structures[i]['A'].append(row)
+                    else: 
+                        pred_arg_structures[i].update({'A':[row]})
+                    pred_arg_structures[i]['L'] = row[-1]
+        else:
+            i+=1
+            # if i > 30:
+            #     for i in range(20):
+            #         print(i)
+            #         print(pred_arg_structures[i])
+            #         print('\n')
+        #structuring feature value pairs as key-value pairs in a dictionary
+        #the first column in the conll file represents tokens
+    for i in pred_arg_structures.keys():
+        #print('I',i)
+       # print(pred_arg_structures[i])
+        try:
+            predicate = pred_arg_structures[i]['P']
+            if 'A' in pred_arg_structures[i].keys():
+                for argument in pred_arg_structures[i]['A']:
+                    #print('arg',argument)
+                    feature_value = {}
+                    for feature_name in selected_features:
+                        row_index = feature_to_index.get(feature_name)
+
+                        feature_value[feature_name] = [argument[row_index], predicate[row_index]]
+
+                    features.append(feature_value)
+                    #The last column provides the gold label (= the correct answer). 
+                    labels.append(pred_arg_structures[i]['L'])
+            
+        except KeyError:
+            continue
     return features, labels
 
 def get_predicted_and_gold_labels(testfile, vectorizer, classifier, selected_features, outputfile):
@@ -230,8 +268,10 @@ print('confusion matrix and classification report for selected features:')
 selected_features = ['form', 'lemma', 'xpos', 'head', 'deprel', 'NE', 'children']
 
 feature_values, labels = extract_features_and_gold_labels(trainfile, selected_features)
+print('features extracted')
 #we can use the same function as before for creating the classifier and vectorizer
 svm_classifier, vectorizer = create_vectorizer_and_classifier(feature_values, labels)
+print('classifier is fit')
 #when applying our model to new data, we need to use the same features
 predictions, goldlabels = get_predicted_and_gold_labels(testfile, vectorizer, svm_classifier, selected_features, 'ewt_test_predictions')
 print_confusion_matrix(predictions, goldlabels)
