@@ -153,17 +153,21 @@ def extract_features_rule_based(conllfile, selected_features):
                                 pred_arg_structures[sentence_idx][predicate]['A'].append(row)
                             else: # if we know sentence and predicate but this is the first arg
                                 pred_arg_structures[sentence_idx][predicate]['A'] = [row]
+                else:
+                    if sentence_idx in pred_arg_structures.keys():
+                        pred_arg_structures[sentence_idx][row[0]] = row
+                    else:
+                        pred_arg_structures[sentence_idx] = {row[0]:row}
+
+
                         
         else:
-            n_predicates = len(pred_arg_structures[sentence_idx])
-            pred_arg_structures[sentence_idx]['n_predicates'] = n_predicates
             sentence_idx +=1
 
-    for i in pred_arg_structures.keys():
+    for i in sorted(pred_arg_structures.keys()):
         try:
             for predicate_idx, pred_arg_pairs in sorted(pred_arg_structures[i].items()):
                 predicate_row = pred_arg_pairs['P']
-
                 if 'A' in pred_arg_pairs.keys():
                     for argument in pred_arg_pairs['A']:
                         feature_value = {}
@@ -176,7 +180,9 @@ def extract_features_rule_based(conllfile, selected_features):
 
                         features.append(feature_value)
                         #The last column provides the gold label (= the correct answer). 
-                        labels.append(argument[-1])
+                        label = is_exact_match(predicate_row, argument)
+                        labels.append(label)
+
             
         except KeyError:
             continue
@@ -225,13 +231,6 @@ def extract_features_and_gold_labels(conllfile, selected_features):
                         
         else:
             i+=1
-            # if i > 30:
-            #     for i in range(20):
-            #         print(i)
-            #         print(pred_arg_structures[i])
-            #         print('\n')
-        #structuring feature value pairs as key-value pairs in a dictionary
-        #the first column in the conll file represents tokens
     for i in pred_arg_structures.keys():
         #print('I',i)
        # print(pred_arg_structures[i])
@@ -280,6 +279,16 @@ def get_predicted_and_gold_labels(testfile, vectorizer, classifier, selected_fea
     predictions = classifier.predict(test_features_vectorized)
     
     return predictions, goldlabels
+
+
+
+def is_exact_match(pred, arg):
+    n_predicates = len(pred) - 7
+    for n in range(n_predicates):
+        if pred[7+n] == 'PREDICATE':
+            return arg[7+n]
+    return 'O'
+
 
 
 def find_best_parameters(trainfile, selected_features):
@@ -354,6 +363,9 @@ def find_best_parameters(trainfile, selected_features):
 # report = classification_report(goldlabels,predictions,digits = 7, zero_division=0)
 # print(report)
 
+def display_output(predications, labels):
+    for i in range(len(predictions)):
+        print(predications[i], labels[i])
 
 print('confusion matrix and classification report for selected features:')
 
@@ -367,6 +379,7 @@ svm_classifier, vectorizer = create_vectorizer_and_classifier(feature_values, la
 print('classifier is fit')
 #when applying our model to new data, we need to use the same features
 predictions, goldlabels = get_predicted_and_gold_labels(testfile, vectorizer, svm_classifier, selected_features, 'ewt_test_predictions')
+display_output(predictions, goldlabels)
 print_confusion_matrix(predictions, goldlabels)
 print_precision_recall_fscore(predictions, goldlabels)
 report = classification_report(goldlabels,predictions,digits = 7, zero_division=0)

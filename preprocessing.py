@@ -6,85 +6,80 @@ def custom_tokenizer(text):
     return Doc(nlp.vocab, tokens_dict[text])
 
 def parse_doc(texts):
+    '''Parse some texts 
+    param: texts: list of texts'''
     nlp = spacy.load("en_core_web_sm")
-    #nlp.max_length = 5300000
-
-    #text = text.lower()
     return nlp.pipe(texts)
-    #doc = nlp(text)
-    # from the Stanford doc: https://stanfordnlp.github.io/stanza/depparse.html
-    #print(*[f'id: {word.id}\tword: {word.text}\thead id: {word.head}\thead: {sent.words[word.head-1].text if word.head > 0 else "root"}\tdeprel: {word.deprel}' for sent in doc.sentences for word in sent.words], sep='\n')
-    #return doc
 
 def get_spacy_repres_of_conll(conll_file):
+    '''Function to parse a conll file as sentences.
+    param conll_file: path to the conll file
+    returns texts: a list of strings containing sentences'''
     conll_object = read_in_conll_file(conll_file)
     text = []
-    c=0
     next(conll_object)
     sentence = []
     while conll_object != None:
-
         try:
             row = next(conll_object)
-            if len(row) > 0:
-                if row[0].startswith('#'):
+            if len(row) > 0: # if not empty
+                if row[0].startswith('#'): # skip these headers
                     continue 
                 else:
-                    sentence.append(row[1])
-                    #print(sentence)
+                    sentence.append(row[1]) # add row to sentence
+
             else:
-                sentence.append('')
-                text.append(' '.join(sentence))
-                sentence = []
+                sentence.append('') # alse append an empty newline
+                text.append(' '.join(sentence)) # append the sentence as text
+                sentence = [] # reset sentence container
         except StopIteration:
             break
-    
     return text
 
 
 def add_features(conll_file):
+    '''Adds features to the conll file: Named Entity Labels and Children of current token'''
     conll_object = read_in_conll_file(conll_file)
-    texts = get_spacy_repres_of_conll(conll_file)
+    texts = get_spacy_repres_of_conll(conll_file) 
     print('parsing')
-    docs = list(parse_doc(texts))
-    #print(docs[0])
+    docs = list(parse_doc(texts)) # a list of the parsed sentences
     print('done')
     with open(conll_file[:-7] + '-feats.conllu', 'w', newline='', encoding='utf-8') as outputcsv:
         csvwriter = csv.writer(outputcsv, delimiter='\t')
         header = ['id', 'form', 'lemma', 'xpos', 'head', 'deprel', 'NE_label', 'children', 'label']
-        csvwriter.writerow(header)
-        next(conll_object)
-        sentence_idx = 0    
+        csvwriter.writerow(header) # write header
+        next(conll_object) # skip initial header
+        sentence_idx = 0 # keeps track of current sentence to align with our spacy representation   
         while conll_object != None:
             sentence_rows = []   
             while True:
                 try:
                     next_row = next(conll_object)
-                except StopIteration:
+                except StopIteration: # abort if conll is empty
                     return
                 if len(next_row) > 0:
-                    if next_row[0].startswith('#'):
+                    if next_row[0].startswith('#'): # skip sentence headers (shouldn't be there but in case)
                         continue
-                    sentence_rows.append(next_row)
+                    sentence_rows.append(next_row) # append row to sentence structure
                 if len(next_row) <=0:
-                    csvwriter.writerow('')
+                    csvwriter.writerow('') # if newline, write this down immediately
                     break
-            doc = docs[sentence_idx]
-            entities = doc.ents
-            entities_text = [e.text for e in entities]
-            for i, row in enumerate(sentence_rows[:-1]):
+            doc = docs[sentence_idx] # get aligning doc 
+            entities = doc.ents # entitites
+            entities_text = [e.text for e in entities] # entity names
+            for i, row in enumerate(sentence_rows[:-1]): # skip final empty row
                 children = list(doc[i].children)
-                #print(doc[i], children)
+
                 if children: 
-                    row.insert(6, children)
+                    row.insert(6, children) # insert list of children
                 else:
                     row.insert(6,'O')
                 if doc[i].text in entities_text:
                     idx = entities_text.index(doc[i].text)
-                    row.insert(6, entities[idx].label_)
+                    row.insert(6, entities[idx].label_) # insert entity label
                 else:
                     row.insert(6, 'O')
-                csvwriter.writerow(row)
+                csvwriter.writerow(row) # write to file
             sentence_idx +=1
 
 
@@ -104,7 +99,9 @@ def read_in_conll_file(conll_file, delimiter='\t'):
 
 
 def is_predicate(row, predicates_in_sentence):
-    #print(row[6], row[7])
+    ''' Checks if current row is a predicate based on rules
+    param row: current row 
+    param predicates_in_sentence: list of predicate idx that are currently known in the sentence'''
     if row[4] == '0':
         predicates_in_sentence.append(row[0])
         return True, predicates_in_sentence
@@ -114,6 +111,9 @@ def is_predicate(row, predicates_in_sentence):
     return False, predicates_in_sentence
 
 def is_argument(predicate, row):
+    '''Checks if current row is an argument 
+    param predicate: idx (int) of referent predicate 
+    param row: current row (list)'''
     if ('nsubj' in row[5] or 'obj' in row[5] or 'obl' in row[5]) and row[4] == predicate:
         return True
     return False
