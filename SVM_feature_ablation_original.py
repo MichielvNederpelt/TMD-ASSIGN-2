@@ -101,6 +101,32 @@ def print_precision_recall_fscore(predictions, goldlabels):
 
 #defines the column in which each feature is located (note: you can also define headers and use csv.DictReader)
 #feature_to_index = {'TOKEN': 0, 'POS': 1, 'LEMMA': 2, 'PUNCTUATION': 3, 'STARTSWITH_CAPITAL_LETTER': 4, 'IS_STOPWORD': 5}
+
+def implement_features(pred_arg_structures, feature_to_index):
+    features = []
+    labels = []
+    for i in sorted(pred_arg_structures.keys()):
+        try:
+            for predicate_idx, pred_arg_pairs in sorted(pred_arg_structures[i].items()):
+                predicate_row = pred_arg_pairs['P']
+                if 'A' in pred_arg_pairs.keys():
+                    for argument in pred_arg_pairs['A']:
+                        feature_value = {}
+                        for feature_name in selected_features:
+                            row_index = feature_to_index.get(feature_name)
+                            try:
+                                feature_value[feature_name] = [argument[row_index], predicate_row[row_index]]
+                            except IndexError:
+                                print(row_index, argument, predicate_row)
+
+                        features.append(feature_value)
+                        #The last column provides the gold label (= the correct answer). 
+                        label = is_exact_match(predicate_row, argument)
+                        labels.append(label)
+        except KeyError:
+            continue
+    return features, labels
+        
 def extract_features_rule_based(conllfile, selected_features):
     '''Function that extracts features and gold label from preprocessed conll (here: tokens only).
     
@@ -153,39 +179,17 @@ def extract_features_rule_based(conllfile, selected_features):
                                 pred_arg_structures[sentence_idx][predicate]['A'].append(row)
                             else: # if we know sentence and predicate but this is the first arg
                                 pred_arg_structures[sentence_idx][predicate]['A'] = [row]
-                else:
-                    if sentence_idx in pred_arg_structures.keys():
-                        pred_arg_structures[sentence_idx][row[0]] = row
-                    else:
-                        pred_arg_structures[sentence_idx] = {row[0]:row}
+                # else:
+                #     if sentence_idx in pred_arg_structures.keys():
+                #         pred_arg_structures[sentence_idx][row[0]] = row
+                #     else:
+                #         pred_arg_structures[sentence_idx] = {row[0]:row}
 
 
                         
         else:
             sentence_idx +=1
-
-    for i in sorted(pred_arg_structures.keys()):
-        try:
-            for predicate_idx, pred_arg_pairs in sorted(pred_arg_structures[i].items()):
-                predicate_row = pred_arg_pairs['P']
-                if 'A' in pred_arg_pairs.keys():
-                    for argument in pred_arg_pairs['A']:
-                        feature_value = {}
-                        for feature_name in selected_features:
-                            row_index = feature_to_index.get(feature_name)
-                            try:
-                                feature_value[feature_name] = [argument[row_index], predicate_row[row_index]]
-                            except IndexError:
-                                print(row_index, argument, predicate)
-
-                        features.append(feature_value)
-                        #The last column provides the gold label (= the correct answer). 
-                        label = is_exact_match(predicate_row, argument)
-                        labels.append(label)
-
-            
-        except KeyError:
-            continue
+    features, labels = implement_features(pred_arg_structures, feature_to_index)
     return features, labels
 
 def extract_features_and_gold_labels(conllfile, selected_features):
@@ -198,7 +202,7 @@ def extract_features_and_gold_labels(conllfile, selected_features):
     :return features: a list of dictionaries, with key-value pair providing the value for the feature `token' for individual instances
     :return labels: a list of gold labels of individual instances
     '''
-    feature_to_index = {'form': 1, 'lemma':2, 'xpos':3, 'head':4, 'deprel':5, 'NE':6, 'children':7}
+    feature_to_index = {'index': 0, 'form': 1, 'lemma':2, 'xpos':3, 'head':4, 'deprel':5, 'NE':6, 'children':7}
     features = []
     labels = []
     conllinput = open(conllfile, 'r', encoding="utf8")
@@ -370,7 +374,7 @@ def display_output(predications, labels):
 print('confusion matrix and classification report for selected features:')
 
 #define which from the available features will be used (names must match key names of dictionary feature_to_index)
-selected_features = ['form', 'lemma', 'xpos', 'head', 'deprel', 'NE', 'children']
+selected_features = ['index', 'form', 'lemma', 'xpos', 'head', 'deprel', 'NE', 'children']
 
 feature_values, labels = extract_features_and_gold_labels(trainfile, selected_features)
 print('features extracted')
