@@ -1,9 +1,6 @@
 import pandas as pd
 import numpy as np
-#import nltk
-#nltk.download('averaged_perceptron_tagger')
-#from nltk.stem import WordNetLemmatizer
-#nltk.download('wordnet')
+
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.svm import LinearSVC
 from sklearn.model_selection import GridSearchCV
@@ -13,8 +10,8 @@ import csv
 
 from sklearn import metrics
 
-trainfile = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train-parta-squeeze_try_combined.conllu"
-testfile = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev-squeeze_try.conllu"
+trainfile = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train-squeeze-feats.conllu"
+testfile = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev-prep-feats-preds-args.conllu"
 
 # training_path_opt ='SEM-2012-SharedTask-CD-SCO-training-simple.v2.features.conll'
 # dev_path_opt = 'SEM-2012-SharedTask-CD-SCO-test-circle.features.conll'
@@ -56,6 +53,20 @@ def print_confusion_matrix(predictions, goldlabels):
     confusion_matrix = pd.crosstab(df['Gold'], df['Predicted'], rownames=['Gold'], colnames=['Predicted'])
     print (confusion_matrix)
 
+def is_predicate(row, predicates_in_sentence):
+    #print(row[6], row[7])
+    if row[4] == '0':
+        predicates_in_sentence.append(row[0])
+        return True, predicates_in_sentence
+    elif predicates_in_sentence and (row[5] in ['xcomp', 'ccomp', 'parataxis', 'advcl'] or (row[5] == 'conj' and row[3] == 'VERB')) and row[4] in predicates_in_sentence:
+        predicates_in_sentence.append(row[0])
+        return True, predicates_in_sentence
+    return False, predicates_in_sentence
+
+def is_argument(predicate, row):
+    if ('nsubj' in row[5] or 'obj' in row[5] or 'obl' in row[5]) and row[4] == predicate:
+        return True
+    return False
 
 def print_precision_recall_fscore(predictions, goldlabels):
     '''
@@ -90,7 +101,86 @@ def print_precision_recall_fscore(predictions, goldlabels):
 
 #defines the column in which each feature is located (note: you can also define headers and use csv.DictReader)
 #feature_to_index = {'TOKEN': 0, 'POS': 1, 'LEMMA': 2, 'PUNCTUATION': 3, 'STARTSWITH_CAPITAL_LETTER': 4, 'IS_STOPWORD': 5}
+def extract_features_rule_based(conllfile, selected_features):
+    '''Function that extracts features and gold label from preprocessed conll (here: tokens only).
+    
+    :param conllfile: path to the (preprocessed) conll file
+    :type conllfile: string
+    
+    
+    :return features: a list of dictionaries, with key-value pair providing the value for the feature `token' for individual instances
+    :return labels: a list of gold labels of individual instances
+    '''
+    feature_to_index = {'index': 0, 'form': 1, 'lemma':2, 'xpos':3, 'head':4, 'deprel':5, 'NE':6, 'children':7}
+    features = []
+    labels = []
+    conllinput = open(conllfile, 'r', encoding="utf8")
+    #delimiter indicates we are working with a tab separated value (default is comma)
+    #quotechar has as default value '"', which is used to indicate the borders of a cell containing longer pieces of text
+    #in this file, we have only one token as text, but this token can be '"', which then messes up the format. We set quotechar to a character that does not occur in our file
+    csvreader = csv.reader(conllinput, delimiter='\t', quotechar='|')
+    next(csvreader, None)
+    pred_arg_structures = dict()
+    sentence_idx=0
+    for row in csvreader:
+        #I preprocessed the file so that all rows with instances should contain 6 values, the others are empty lines indicating the beginning of a sentence
+        if len(row) > 0:
+           # print(row[-1])
+            #predicate, predicates_in_sentence = is_predicate(row, predicates_in_sentence)
+            # if the row is classified as a predicate, add to sentence dict as predicate_idx: P: row
+            if row[8] == 'RB_PRED':
+                pred_ix = row[0]
+                if sentence_idx not in pred_arg_structures.keys():
+                    pred_arg_structures[sentence_idx] = {pred_ix: {'P':row}}
+                else: 
+                    if pred_ix in pred_arg_structures[sentence_idx].keys():
+                        pred_arg_structures[sentence_idx][pred_ix]['P'] = row 
+                    else:
+                        pred_arg_structures[sentence_idx][pred_ix] = {'P':row}
+                #pred_arg_structures[sentence_idx]['L'] = row[-1]
 
+            elif row[9].startswith('RB_ARG:'):
+                predicate_attatchments = row[9].strip('RB_ARG:').split('-')
+                for predicate in predicate_attatchments:
+                    if sentence_idx not in pred_arg_structures.keys(): # if this is the first entry for the sentence, add complete structure
+                        pred_arg_structures[sentence_idx] = {predicate : {'A':[row]}}
+                    else: 
+
+                        if predicate not in pred_arg_structures[sentence_idx].keys(): # if the sentence is already set up but we have an unseen predicate
+                            pred_arg_structures[sentence_idx][predicate] = {'A': [row]}
+                        else: 
+                            if 'A' in pred_arg_structures[sentence_idx][predicate].keys(): # if we know the sentence, pred and already have args
+                                pred_arg_structures[sentence_idx][predicate]['A'].append(row)
+                            else: # if we know sentence and predicate but this is the first arg
+                                pred_arg_structures[sentence_idx][predicate]['A'] = [row]
+                        
+        else:
+            n_predicates = len(pred_arg_structures[sentence_idx])
+            pred_arg_structures[sentence_idx]['n_predicates'] = n_predicates
+            sentence_idx +=1
+
+    for i in pred_arg_structures.keys():
+        try:
+            for predicate_idx, pred_arg_pairs in sorted(pred_arg_structures[i].items()):
+                predicate_row = pred_arg_pairs['P']
+
+                if 'A' in pred_arg_pairs.keys():
+                    for argument in pred_arg_pairs['A']:
+                        feature_value = {}
+                        for feature_name in selected_features:
+                            row_index = feature_to_index.get(feature_name)
+                            try:
+                                feature_value[feature_name] = [argument[row_index], predicate_row[row_index]]
+                            except IndexError:
+                                print(row_index, argument, predicate)
+
+                        features.append(feature_value)
+                        #The last column provides the gold label (= the correct answer). 
+                        labels.append(argument[-1])
+            
+        except KeyError:
+            continue
+    return features, labels
 
 def extract_features_and_gold_labels(conllfile, selected_features):
     '''Function that extracts features and gold label from preprocessed conll (here: tokens only).
@@ -132,6 +222,7 @@ def extract_features_and_gold_labels(conllfile, selected_features):
                     else: 
                         pred_arg_structures[i].update({'A':[row]})
                     pred_arg_structures[i]['L'] = row[-1]
+                        
         else:
             i+=1
             # if i > 30:
@@ -152,8 +243,10 @@ def extract_features_and_gold_labels(conllfile, selected_features):
                     feature_value = {}
                     for feature_name in selected_features:
                         row_index = feature_to_index.get(feature_name)
-
-                        feature_value[feature_name] = [argument[row_index], predicate[row_index]]
+                        try:
+                            feature_value[feature_name] = [argument[row_index], predicate[row_index]]
+                        except IndexError:
+                            print(row_index, predicate, argument)
 
                     features.append(feature_value)
                     #The last column provides the gold label (= the correct answer). 
@@ -181,7 +274,7 @@ def get_predicted_and_gold_labels(testfile, vectorizer, classifier, selected_fea
     '''
     
     #we use the same function as above (guarantees features have the same name and form)
-    features, goldlabels = extract_features_and_gold_labels(testfile, selected_features)
+    features, goldlabels = extract_features_rule_based(testfile, selected_features)
     #we need to use the same fitting as before, so now we only transform the current features according to this mapping (using only transform)
     test_features_vectorized = vectorizer.transform(features)
     predictions = classifier.predict(test_features_vectorized)
