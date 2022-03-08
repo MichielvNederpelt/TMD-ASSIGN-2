@@ -121,7 +121,8 @@ def is_predicate(row, predicates_in_sentence):
     if row[6] == '0':
         predicates_in_sentence.append(row[0])
         return True, predicates_in_sentence
-    elif predicates_in_sentence and (row[7] in ['xcomp', 'ccomp', 'parataxis', 'advcl'] or (row[7] == 'conj' and row[4] == 'VERB')) and row[6] in predicates_in_sentence:
+    elif (predicates_in_sentence and (row[7] in ['xcomp', 'ccomp', 'parataxis', 'advcl'] or (row[7] == 'conj' and row[3] == 'VERB') \
+        or (row[7]) == 'conj' and row[6] ) and row[6] in predicates_in_sentence) or (row[3] == 'AUX' and row[4] in ['VBD', 'VBZ', 'VBN', 'VBP', 'VB']):
         predicates_in_sentence.append(row[0])
         return True, predicates_in_sentence
     return False, predicates_in_sentence
@@ -197,7 +198,7 @@ def squeeze_gold(conll_file):
     returns: an extended conll file with sentence predicates redistributed per predicate line
     """
     conll_object = read_in_conll_file(conll_file)
-    with open(conll_file[:-7] + '-squeeze.conllu', 'w', newline='', encoding='utf-8') as outputcsv:
+    with open(conll_file[:-7] + '-sq.conllu', 'w', newline='', encoding='utf-8') as outputcsv:
         # write header
         csvwriter = csv.writer(outputcsv, delimiter='\t')
         header = ['id', 'form', 'lemma', 'xpos', 'head', 'deprel', 'pr_label']
@@ -246,11 +247,10 @@ def squeeze_gold(conll_file):
                         #     target_col = 'O'
                     except IndexError:
                         if 'CopyOf=' in row[n_features-1]:
+                            print(row)
                             idx = int(row[n_features-1].strip('CopyOf='))
                             target_col = list_of_sentence_rows[idx][n_features-1+i]
 
-                    if target_col == 'V':
-                        target_col = 'PREDICATE'
                     if 'C-' in target_col:
                         target_col = target_col.strip('C-')
                     if '-CXN' in target_col:
@@ -261,6 +261,8 @@ def squeeze_gold(conll_file):
                         target_col = target_col.strip('-DSP')
                     if 'ARGM' in target_col:
                         target_col = 'ARGM'
+                    if target_col == 'V':
+                        target_col = 'PREDICATE'
 
                     if target_col == '_':
                         target_col = 'O'
@@ -299,7 +301,6 @@ def preprocess_args(conll_file):
                         break
                 except StopIteration:
                     return
-          #  print('predicates in this sentence detected:', list_of_sentence_predicates)
             for i, row in enumerate(list_of_sentence_rows):
                 if len(row) <= 0:
                     csvwriter.writerow(row)
@@ -311,6 +312,7 @@ def preprocess_args(conll_file):
                         #print('Predicate', pred, 'has an argument', row[1])
                     #print('true')
                         predicate_relations.append(pred)
+
                 if predicate_relations:
                     row.insert(12, 'RB_ARG:'+ '-'.join(predicate_relations))
                 else:
@@ -330,40 +332,74 @@ def preprocess_predicates(conll_file):
         csvwriter = csv.writer(outputcsv, delimiter='\t')
         #header = ['id', 'form', 'lemma', 'xpos', 'head', 'deprel', 'label']
         #csvwriter.writerow(header)
-        predicates_in_sentence = []
+        sentences = []
+        current_sent = []
         for row in conll_object:
             if len(row)>0 :
                 #if row[0].startswith('#'):
                 #    continue
-                val_pred, predicates_in_sentence = is_predicate(row, predicates_in_sentence)
-                gold_label = row[-1]
-                if val_pred == True and gold_label == 'PREDICATE':
-                    row.insert(11, 'RB_PRED')
-                elif val_pred == True:
-                    row.insert(11, 'INC_PRED')
-                else:
-                    row.insert(11, 'O')
+                current_sent.append(row)
             else:
-                predicates_in_sentence = []
-            csvwriter.writerow(row)
+                sentences.append(current_sent)
+                current_sent = []
+                
 
+        for sentence in sentences:
+            labeled_sentence = label_predicates(sentence)
+            reverse_labeled_sentence = reversed(label_predicates(labeled_sentence, reverse=True))
+
+
+            for row in reverse_labeled_sentence:
+                csvwriter.writerow(row)
+            csvwriter.writerow('')
+
+
+def label_predicates(sentence, reverse=False):
+    predicates_in_sentence = []
+    if reverse:
+        sentence = list(reversed(sentence))
+    
+        for row in sentence:
+            val_pred, predicates_in_sentence = is_predicate(row, predicates_in_sentence)
+
+            gold_label = row[-1]
+            if val_pred == True and gold_label == 'PREDICATE':
+                row[11] = 'RB_PRED'
+            elif val_pred == True:
+                row[11] =  'INC_PRED'
+        else:
+            predicates_in_sentence = []
+    else:
+        for row in sentence:
+            val_pred, predicates_in_sentence = is_predicate(row, predicates_in_sentence)
+
+            gold_label = row[-1]
+            if val_pred == True and gold_label == 'PREDICATE':
+                row.insert(11, 'RB_PRED')
+            elif val_pred == True:
+                row.insert(11, 'INC_PRED')
+            else:
+                row.insert(11, 'O')
+        else:
+            predicates_in_sentence = []
+    return sentence
 
 #Adapt paths to relative paths for now hard coded paths are fine
 path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train.conllu"
-sq_path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train-squeeze.conllu"
-feature_path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train-squeeze-feats.conllu"
-pred_path =r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train-squeeze-feats-preds.conllu"
+sq_path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train-sq.conllu"
+feature_path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train-sq-feats.conllu"
+pred_path =r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train-sq-feats-preds.conllu"
 
-squeeze_gold(path)
-add_features(sq_path)
+# squeeze_gold(path)
+# add_features(sq_path)
 preprocess_predicates(feature_path)
 preprocess_args(pred_path)
 path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev.conllu"
-sq_path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev-squeeze.conllu"
-feature_path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev-squeeze-feats.conllu"
-pred_path =r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev-squeeze-feats-preds.conllu"
+sq_path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev-sq.conllu"
+feature_path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev-sq-feats.conllu"
+pred_path =r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev-sq-feats-preds.conllu"
 
-squeeze_gold(path)
-add_features(sq_path)
+##squeeze_gold(path)
+#add_features(sq_path)
 preprocess_predicates(feature_path)
 preprocess_args(pred_path)
