@@ -1,6 +1,9 @@
 import csv
+from numpy import number
 import spacy
 from spacy.tokens import Doc
+
+n_features = 9
 
 def custom_tokenizer(text):
     """
@@ -81,17 +84,17 @@ def add_features(conll_file):
             entities = doc.ents # entitites
             entities_text = [e.text for e in entities] # entity names
             for i, row in enumerate(sentence_rows[:-1]): # skip final empty row
-                children = list(doc[i].children)
+                children = '|'.join([tok.text for tok in list(doc[i].children)])
 
                 if children:
-                    row.insert(6, children) # insert list of children
+                    row.insert(9, children) # insert list of children
                 else:
-                    row.insert(6,'O')
+                    row.insert(9,'O')
                 if doc[i].text in entities_text:
                     idx = entities_text.index(doc[i].text)
-                    row.insert(6, entities[idx].label_) # insert entity label
+                    row.insert(10, entities[idx].label_) # insert entity label
                 else:
-                    row.insert(6, 'O')
+                    row.insert(10, 'O')
                 csvwriter.writerow(row) # write to file
             sentence_idx +=1
 
@@ -115,10 +118,10 @@ def is_predicate(row, predicates_in_sentence):
     param row: current row
     param predicates_in_sentence: list of predicate idx that were detected in the sentence
     '''
-    if row[4] == '0':
+    if row[6] == '0':
         predicates_in_sentence.append(row[0])
         return True, predicates_in_sentence
-    elif predicates_in_sentence and (row[5] in ['xcomp', 'ccomp', 'parataxis', 'advcl'] or (row[5] == 'conj' and row[3] == 'VERB')) and row[4] in predicates_in_sentence:
+    elif predicates_in_sentence and (row[7] in ['xcomp', 'ccomp', 'parataxis', 'advcl'] or (row[7] == 'conj' and row[4] == 'VERB')) and row[6] in predicates_in_sentence:
         predicates_in_sentence.append(row[0])
         return True, predicates_in_sentence
     return False, predicates_in_sentence
@@ -129,7 +132,7 @@ def is_argument(predicate, row):
     param predicate: predicate position (idx (int)) of referent predicate
     param row: current row (list)
     '''
-    if ('nsubj' in row[5] or 'obj' in row[5] or 'obl' in row[5]) and row[4] == predicate:
+    if ('nsubj' in row[7] or 'obj' in row[7] or 'obl' in row[7]) and row[6] == predicate:
         return True
     return False
 
@@ -197,7 +200,7 @@ def squeeze_gold(conll_file):
     with open(conll_file[:-7] + '-squeeze.conllu', 'w', newline='', encoding='utf-8') as outputcsv:
         # write header
         csvwriter = csv.writer(outputcsv, delimiter='\t')
-        header = ['id', 'form', 'lemma', 'xpos', 'head', 'deprel', 'label']
+        header = ['id', 'form', 'lemma', 'xpos', 'head', 'deprel', 'pr_label']
         csvwriter.writerow(header)
         next(conll_object)
         while conll_object != None:
@@ -205,22 +208,31 @@ def squeeze_gold(conll_file):
             while True:
                 try:
                     next_row = next(conll_object)
+                    #print([(i,x) for i, x in enumerate(next_row)])
                     if len(next_row) > 0: # only if not empty
                         if next_row[0].startswith('#'): # skip non-tokens
                             continue
                         else: # delete unwanted features
-                            del next_row[10]
-                            del next_row[9]
-                            del next_row[5]
-                            del next_row[3]
+                            # del next_row[10] # sense
+                            del next_row[9] # extra
+                            del next_row[8] #dependency
+                            # del next_row[5] # feats
+                            # del next_row[3] # upos
                     list_of_sentence_rows.append(next_row)
                     if len(next_row) <=0:
+                        #csvwriter.writerow('')
                         break
                 except StopIteration:
-                    print('empty')
                     break
+            try: 
+                number_of_predicates = len(list_of_sentence_rows[0])-n_features
+            except IndexError:   
+                break 
 
-            number_of_predicates = len(list_of_sentence_rows[0])-7
+            if number_of_predicates == 0:
+                for row in list_of_sentence_rows:
+                    csvwriter.writerow(row[:n_features-1] + ['O'])
+
             for i in range(1, number_of_predicates+1):
                 #print('predicate', i)
                 for row in list_of_sentence_rows:
@@ -229,22 +241,32 @@ def squeeze_gold(conll_file):
                         csvwriter.writerow(row)
                         continue
                     try:
-                        target_col = row[6+i]
-                        if target_col == '_':
-                            target_col = 'O'
-                        elif target_col == 'V':
-                            target_col = 'PREDICATE'
-                        if 'C-' in target_col:
-                            target_col = target_col.strip('C-')
-                        if 'ARGM' in target_col:
-                            target_col = 'ARGM'
-
+                        target_col = row[n_features-1+i]
+                        # if target_col != 'V' and 'C-' not in target_col and 'ARGM' not in target_col: 
+                        #     target_col = 'O'
                     except IndexError:
-                        if 'CopyOf=' in row[6]:
-                            idx = int(row[6].strip('CopyOf='))
-                            target_col = list_of_sentence_rows[idx][6+i]
+                        if 'CopyOf=' in row[n_features-1]:
+                            idx = int(row[n_features-1].strip('CopyOf='))
+                            target_col = list_of_sentence_rows[idx][n_features-1+i]
 
-                    extended_row = row[:6] + [target_col]
+                    if target_col == 'V':
+                        target_col = 'PREDICATE'
+                    if 'C-' in target_col:
+                        target_col = target_col.strip('C-')
+                    if '-CXN' in target_col:
+                        target_col = target_col.strip('-CXN')
+                    if 'R-' in target_col:
+                        target_col = target_col.strip('R-')
+                    if '-DSP' in target_col:
+                        target_col = target_col.strip('-DSP')
+                    if 'ARGM' in target_col:
+                        target_col = 'ARGM'
+
+                    if target_col == '_':
+                        target_col = 'O'
+
+
+                    extended_row = row[:n_features] + [target_col]
                     csvwriter.writerow(extended_row)
 
 
@@ -254,10 +276,11 @@ def preprocess_args(conll_file):
     param conll_file: path to conll file
     returns: new conll file with predicates with their relation added
      '''
+    print('ADDING ARGUMENTS')
     conll_object = read_in_conll_file(conll_file)
-    with open(conll_file[:-7] + '-args.conllu', 'w', newline='', encoding='utf-8') as outputcsv:
+    with open(conll_file[:-20] + '-final.conllu', 'w', newline='', encoding='utf-8') as outputcsv:
         csvwriter = csv.writer(outputcsv, delimiter='\t')
-        header = ['id', 'form', 'lemma', 'xpos', 'head', 'deprel', 'NE_label', 'children', 'rb-predicate', 'rb-arg', 'label']
+        header = ['id', 'form', 'lemma', 'upos', 'xpos', 'feats','head', 'deprel', 'sense', 'children', 'NE', 'rb-predicate', 'rb-arg', 'label']
         csvwriter.writerow(header)
         next(conll_object)
 
@@ -270,7 +293,7 @@ def preprocess_args(conll_file):
                     next_row = next(conll_object)
                     list_of_sentence_rows.append(next_row)
                     if len(next_row) > 0:
-                        if next_row[8] == 'RB_PRED':
+                        if next_row[11] == 'RB_PRED':
                             list_of_sentence_predicates.append(next_row[0])
                     else:
                         break
@@ -284,15 +307,14 @@ def preprocess_args(conll_file):
                 predicate_relations = []
                 for pred in list_of_sentence_predicates:
                     val = is_argument(pred, row)
-                    #print(pred, row)
                     if val == True:
                         #print('Predicate', pred, 'has an argument', row[1])
                     #print('true')
                         predicate_relations.append(pred)
                 if predicate_relations:
-                    row.insert(9, 'RB_ARG:' + '-'.join(predicate_relations))
+                    row.insert(12, 'RB_ARG:'+ '-'.join(predicate_relations))
                 else:
-                    row.insert(9, 'O')
+                    row.insert(12, 'O')
                 #print(row)
                 csvwriter.writerow(row)
 
@@ -302,6 +324,7 @@ def preprocess_predicates(conll_file):
     param conll_file: path to conll file
     returns: new conll file with collumn of token being a predicate or not
      '''
+    print('ADDING PREDICATES')
     conll_object = read_in_conll_file(conll_file)
     with open(conll_file[:-7] + '-preds.conllu', 'w', newline='', encoding='utf-8') as outputcsv:
         csvwriter = csv.writer(outputcsv, delimiter='\t')
@@ -313,22 +336,34 @@ def preprocess_predicates(conll_file):
                 #if row[0].startswith('#'):
                 #    continue
                 val_pred, predicates_in_sentence = is_predicate(row, predicates_in_sentence)
-                if val_pred == True:
-                    row.insert(8, 'RB_PRED')
+                gold_label = row[-1]
+                if val_pred == True and gold_label == 'PREDICATE':
+                    row.insert(11, 'RB_PRED')
+                elif val_pred == True:
+                    row.insert(11, 'INC_PRED')
                 else:
-                    row.insert(8, 'O')
+                    row.insert(11, 'O')
             else:
                 predicates_in_sentence = []
             csvwriter.writerow(row)
 
 
 #Adapt paths to relative paths for now hard coded paths are fine
-path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev.conllu"
-sq_path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev-prep.conllu"
-feature_path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev-prep-feats.conllu"
-pred_path =r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev-prep-feats-preds.conllu"
+path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train.conllu"
+sq_path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train-squeeze.conllu"
+feature_path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train-squeeze-feats.conllu"
+pred_path =r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-train-squeeze-feats-preds.conllu"
 
-preprocess_gold(path)
+squeeze_gold(path)
+add_features(sq_path)
+preprocess_predicates(feature_path)
+preprocess_args(pred_path)
+path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev.conllu"
+sq_path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev-squeeze.conllu"
+feature_path = r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev-squeeze-feats.conllu"
+pred_path =r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev-squeeze-feats-preds.conllu"
+
+squeeze_gold(path)
 add_features(sq_path)
 preprocess_predicates(feature_path)
 preprocess_args(pred_path)
