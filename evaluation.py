@@ -5,8 +5,21 @@ from collections import defaultdict, Counter
 import glob
 from sklearn.metrics import ConfusionMatrixDisplay, classification_report, confusion_matrix
 from sklearn import metrics
+import csv
 
 ## THIS SCRIPT WAS ADAPTED FROM THE ML4NLP COURSE
+
+def read_in_conll_file(conll_file, delimiter='\t'):
+    '''
+    THIS CODE WAS ADAPTED FROM THE ML4NLP COURSE
+    Read in conll file and return structured object
+    :param conll_file: path to conll_file
+    :param delimiter: specifies how columns are separated. Tabs are standard in conll
+    :returns structured representation of information included in conll file
+    '''
+    my_conll = open(conll_file, 'r', encoding='utf-8')
+    conll_as_csvreader = csv.reader(my_conll, delimiter=delimiter, quoting=csv.QUOTE_NONE)
+    return conll_as_csvreader
 
 def extract_annotations(inputfile, delimiter='\t'):
     '''
@@ -20,42 +33,86 @@ def extract_annotations(inputfile, delimiter='\t'):
     annotations = conll_input['label'].tolist()
     return annotations
 
-def obtain_counts(goldannotations, machineannotations):
+def evaluate_correct_predicates(conll_file):
+    conll_object = list(read_in_conll_file(conll_file))
+    total = len(conll_object)
+    identified = 0
+    missed = 0
+    wrong=0
+    for row in conll_object:
+        if len(row) > 0:
+            if row[-1] == 'PREDICATE' and row[11] != 'O': # true positive
+                identified +=1 
+            elif row[-1] == 'PREDICATE': # false negative
+                missed +=1
+            elif row[-1] != 'PREDICATE' and row[11] != 'O': # false positive
+                wrong +=1
+    total_n_predicates = identified + missed
+    #true_negatives = total-total_n_predicates
+    precision = identified/(total_n_predicates)
+    recall = identified/(missed+identified)
+    f = (2*precision*recall) / (precision+recall)
+    print('PREDICATE DETECTION SCORES')
+    print(f'Precision: {precision} - Recall: {recall} - F-score: {f}')
+
+def read_sentences(conll_object):
     '''
-    This function compares the gold annotations to machine output
+    Reads the conll object sentence by sentence and collect a structure containing the sentences and the
+    (rule-based identified) predicate (unique for each sentence copy in the conll file).
 
-    :param goldannotations: the gold annotations (list)
-    :param machineannotations: the output annotations of the system in question (list)
+    param: conll_object: an input file containing samples on each row, where feature token is the first word on each row
+    returns: data: a dict with the list of predicate indexes and a list of sentences (as a list of the conll rows)
+        '''
+    data = defaultdict(list)
+    current_sent = []
 
-    :returns: a countainer providing the counts for each predicted and gold class pair as {CLASS1: Counter(CLASS1: x, CLASS2: y)}
-    '''
-    evaluation_counts = defaultdict(Counter)
-    for gold, machine in zip(goldannotations, machineannotations):
-        evaluation_counts[gold].update({machine:1})
+    next(conll_object)
+    collected_predicate = False # keeps track if a predicate was found in a sentence (since there are sentences which don't have one)
+    for row in conll_object:
+        if len(row) > 0:
+            if row[11] == 'RB_PRED': # if the current row is a predicate, append it to the list
+                data['predicate'].append(row[0])
+                collected_predicate = True
+            
+            current_sent.append(row) # append row to sentence in any case
+        else:
+            if not collected_predicate: # if we have not collected a predicate append a dummy variable x 
+                data['predicate'].append('X')
+            collected_predicate = False
+            data['sentences'].append(current_sent) # we append the sentence as a whole
+            current_sent = [] # empty the sentence
+    return data
 
-    return evaluation_counts
 
-def obtain_pr_stats(evaluation_counts):
-    ''' 
-    This function creates a datastructure containing the True Positives, True Negatives, False Positives and False Negatives
-    for each class
-    params:
-        evaluation_counts: a dict of counters providing the counts for each predicted and gold class pair
-    returns:
-        stats_dict: a dictonary of defaultdicts as{'TP': {CLASS1: 0, CLASS2:7} ....}
-    '''
-    stats_dict = {'TP' : defaultdict(int), 'TN' : defaultdict(int), 'FP':defaultdict(int), 'FN' : defaultdict(int)}
-    for key, value in evaluation_counts.items():
-        for nestedkey, nestedvalue in value.items():
-            if key==nestedkey:
-                stats_dict['TP'][key] += nestedvalue ## if gold, predicted pair is equal add count as true positive
-                for key2 in evaluation_counts.keys():
-                    if key2 != key:
-                        stats_dict['TN'][key2] += nestedvalue # for each other class, add count as true negatives
-            else:
-                stats_dict['FP'][nestedkey] += nestedvalue # if gold, predicted keys are not equal, the count is added as false positive
-                stats_dict['FN'][key] += nestedvalue # and we missed this count for the key, so add as false negative
-    return stats_dict
+def evaluate_correct_arguments(conll_file):
+    conll_object = read_in_conll_file(conll_file)
+    sentences = read_sentences(conll_object)
+    identified = 0
+    missed = 0
+    wrong=0
+    for i, sentence in enumerate(sentences['sentences']):
+        current_predicate = sentences['predicate'][i]
+        for row in sentence:
+            if len(row) > 0:
+                if 'ARG' in row[-1] and row[12] != 'O':
+                    pred_references = row[12].strip('RB_ARG:').split('-')
+                    #print(current_predicate, pred_references)
+                    if current_predicate in pred_references:
+                        identified +=1
+                    else: 
+                        wrong +=1 
+                elif 'ARG' in row[-1]:
+                    missed +=1
+                elif row[12] != 'O' and 'ARG' not in row[-1]:
+                    wrong +=1
+    total_n_args = identified + missed
+    #true_negatives = total-total_n_predicates
+    precision = identified/(total_n_args)
+    recall = identified/(missed+identified)
+    f = (2*precision*recall) / (precision+recall)
+    print('ARGUMENT DETECTION SCORES')
+    print(f'Precision: {precision} - Recall: {recall} - F-score: {f}')
+
 def print_confusion_matrix(predictions, goldlabels):
     '''
     Function that prints out a confusion matrix
@@ -72,54 +129,6 @@ def print_confusion_matrix(predictions, goldlabels):
     confusion_matrix = pd.crosstab(df['Gold'], df['Predicted'], rownames=['Gold'], colnames=['Predicted'])
     print (confusion_matrix)
 
-def calculate_precision_recall_fscore(evaluation_counts):
-    '''
-    Calculate precision recall and fscore for each class and return them in a dictionary
-
-    :param evaluation_counts: a container from which you can obtain the true positives, false positives and false negatives for each class (dict)
-
-    :returns the precision, recall and f-score of each class (dict)
-    '''
-    gold_classes = list(evaluation_counts.keys())
-    stats_dict = obtain_pr_stats(evaluation_counts)
-
-    report = defaultdict(dict)
-    for c in gold_classes:
-        TP_c = stats_dict['TP'][c]
-        TN_c = stats_dict['TN'][c]
-        FP_c = stats_dict['FP'][c]
-        FN_c = stats_dict['FN'][c]
-
-        recall_c = TP_c/(TP_c+FN_c)
-        try:
-            precision_c = TP_c/(TP_c+FP_c)
-            f1_c = (2 * precision_c * recall_c) / (precision_c + recall_c)
-        except ZeroDivisionError: # if precision is 0, f1 is also 0
-            precision_c = 0
-            f1_c = 0
-        report[c]['precision'] = precision_c
-        report[c]['recall'] = recall_c
-        report[c]['f-score'] = f1_c
-    for unit in ['precision', 'recall', 'f-score']:
-        report['avg'][unit] = sum([report[c][unit] for c in gold_classes])/len(gold_classes)
-    return report
-
-def provide_confusion_matrix(evaluation_counts):
-    '''
-    Read in the evaluation counts and provide a confusion matrix for each class
-
-    :param evaluation_counts: a dict containing the true positives, false positives and false negatives for each class
-
-    :prints out a confusion matrix
-    '''
-    gold_classes = list(evaluation_counts.keys())
-    print('\nCONFUSION MATRIX\n')
-    all_counts = []
-    for c in gold_classes:
-        counts = [evaluation_counts[c][cla] for cla in gold_classes]
-        all_counts.append(counts)
-    df = pd.DataFrame.from_records(all_counts, columns=gold_classes, index=gold_classes)
-    print(df.to_latex())
 def print_precision_recall_fscore(predictions, goldlabels):
     '''
     Function that prints out precision, recall and f-score
@@ -170,15 +179,16 @@ def main(my_args=None):
     if my_args is None:
         my_args = sys.argv
     gold = my_args[1]
-    folder = my_args[2]
+    modelfile = my_args[2]
 
-    modelfile = folder +'model831711.conllu'
     print('FILE:    ', '-'.join(modelfile.split('\\')[-1:][0].split("_"))[:-4])
     gold_annotations = extract_annotations(gold)
     print(set(gold_annotations))
     system_annotations = extract_annotations(modelfile)
     print(set(system_annotations))
     provide_output_tables(gold_annotations, system_annotations)
+    evaluate_correct_predicates(gold)
+    evaluate_correct_arguments(gold)
 #my_args =['python', r'C:\Users\Tessel Wisman\Documents\TextMining\AppliedTMMethods\SEM-2012-SharedTask-CD-SCO-simple.v2\SEM-2012-SharedTask-CD-SCO-test-preprocessed.txt', r'C:\Users\Tessel Wisman\Documents\TextMining\AppliedTMMethods\Group3_TMwork\models\testset\\']
 if __name__ == '__main__':
     print('EVAL')

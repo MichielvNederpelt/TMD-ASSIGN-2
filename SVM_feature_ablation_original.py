@@ -61,7 +61,7 @@ def is_predicate(row, predicates_in_sentence):
     elif predicates_in_sentence and (row[5] in ['xcomp', 'ccomp', 'parataxis', 'advcl'] or (row[5] == 'conj' and row[3] == 'VERB')) and row[4] in predicates_in_sentence:
         predicates_in_sentence.append(row[0])
         return True, predicates_in_sentence
-    return False, predicates_in_sentence
+    return False, predicates_in_sentence 
 
 def is_argument(predicate, row):
     if ('nsubj' in row[5] or 'obj' in row[5] or 'obl' in row[5]) and row[4] == predicate:
@@ -115,7 +115,7 @@ def implement_features(pred_arg_structures, feature_to_index):
                         for feature_name in selected_features:
                             row_index = feature_to_index.get(feature_name)
                             try:
-                                feature_value[feature_name] = [argument[row_index], predicate_row[row_index]]
+                                feature_value[feature_name] = (argument[row_index], predicate_row[row_index])
                             except IndexError:
                                 print(row_index, argument, predicate_row)
 
@@ -247,7 +247,7 @@ def extract_features_and_gold_labels(conllfile, selected_features):
                     for feature_name in selected_features:
                         row_index = feature_to_index.get(feature_name)
                         try:
-                            feature_value[feature_name] = [argument[row_index], predicate[row_index]]
+                            feature_value[feature_name] = (argument[row_index], predicate[row_index])
                         except IndexError:
                             print(row_index, predicate, argument)
 
@@ -277,7 +277,7 @@ def get_predicted_and_gold_labels(testfile, vectorizer, classifier, selected_fea
     '''
     
     #we use the same function as above (guarantees features have the same name and form)
-    features, goldlabels = extract_features_rule_based(testfile, selected_features)
+    features, goldlabels = extract_features_and_gold_labels(testfile, selected_features)
     #we need to use the same fitting as before, so now we only transform the current features according to this mapping (using only transform)
     test_features_vectorized = vectorizer.transform(features)
     predictions = classifier.predict(test_features_vectorized)
