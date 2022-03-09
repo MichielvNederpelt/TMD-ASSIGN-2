@@ -14,6 +14,8 @@ Based on the predicates, arguments need to be identified. For the rule based app
 
 This approach is a simple way of extracting predicates and arguments. Unfortunately, it isn't flawless since rules are hard coded which does not provide space for exceptions. We found that some predicates had a different dependency label, which results in overlooking that predicate. Another problem was labeling incorrect predicates or arguments based on the rules. Replicating this approach can be done by running predicates_from_dependency.py.
 
+** Needs to be rewritten since things changed compared to the first week(s)
+
 
 
 ## Description of the classification task for argument classification:
