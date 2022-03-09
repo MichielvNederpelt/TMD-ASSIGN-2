@@ -4,6 +4,17 @@
 - Tessel Wisman
 - Michiel van Nederpelt
 
+overview of how to run the scripts:
+- Step 1: Run preprocess.py. 
+This script preprocesses the original file into several files, adding features and extracting predicates and arguments via a rule-based approach.
+
+- Step 2: Run system.py
+This script will train the SVM classifier and test it on the test data.
+
+- Step 3: Run evaluation.py
+This script will compare the predictions made by the classifier with the gold data.
+Also, it shows the an evaluation on the extraction of predicates and arguments (compared to the gold data) to detect if extracts these properly.
+
 ## Description of predicate and argument extraction:
 
 First, the dataset (Universal proposition banks)  was preprocessed in such a way that all predicates and arguments were found. This was done by counting all the extra columns in our dataset, which denote an extra predicate. Then, the sentence was duplicated the same amount of times as the previous count. Each duplicated sentence focused on a seperate predicate and it's arguments. 
@@ -46,9 +57,6 @@ This feature is already provided in the dataset. It is a useful feature which in
 
 ## Choice of Machine learning algorithm:
 
-### Rule-based?
-
-
 ### SVM
 
 The system which is used is the Support Vector Machine (SVM), which is a supervised learning model that can deal with a large number of data and features. It is a system can be used for classification tasks where the system tries to find the best seperation line (also called hyperplane) between datapoints of classes. Other research (Hacioglu, 2004; Pradhan et al, 2005) has shown that SVM was a good system to use, and therefore we want to use it as well in combination with our extracted features. 
@@ -67,7 +75,7 @@ he model will combine word-level features into a document level feature vector. 
 The predictor takes as input the vector for each instance in a batch and predicts a label for it. The output is expected to be a score for each possible label and the computed loss. 
 
 # Evaluation:
-After running evaluation.py, one can see precision, recall and F-scores for each argument class and predicates. The macro-average weight shows a performance of 0.457 (F-score). Recall is 0.62, which means that 62% of relevant items were retrieved. Precision, however, is 0.40 which means that of the retrieved elements 40% is classified correctly. 
+After running evaluation.py, one can see precision, recall and F-scores for each argument class and predicates. The macro-average weight shows a performance of 0.401 (F-score). Recall is 0.62, which means that 62% of relevant items were retrieved. Precision, however, is 0.40 which means that of the retrieved elements 40% is classified correctly. 
 
 ### Error analysis test set:
 
