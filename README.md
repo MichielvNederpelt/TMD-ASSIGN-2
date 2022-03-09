@@ -60,6 +60,9 @@ he model will combine word-level features into a document level feature vector. 
 The predictor takes as input the vector for each instance in a batch and predicts a label for it. The output is expected to be a score for each possible label and the computed loss. 
 
 # Evaluation:
+After running evaluation.py, one can see precision, recall and F-scores for each argument class and predicates. The macro-average weight shows a performance of 0.457 (F-score). Recall is 0.62, which means that 62% of relevant items were retrieved. Precision, however, is 0.40 which means that of the retrieved elements 40% is classified correctly. 
+
+### Error analysis test set:
 
 
 
