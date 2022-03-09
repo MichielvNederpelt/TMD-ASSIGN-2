@@ -14,16 +14,14 @@ Based on the predicates, arguments need to be identified. For the rule based app
 
 This approach is a simple way of extracting predicates and arguments. Unfortunately, it isn't flawless since rules are hard coded which does not provide space for exceptions. We found that some predicates had a different dependency label, which results in overlooking that predicate. Another problem was labeling incorrect predicates or arguments based on the rules. Replicating this approach can be done by running predicates_from_dependency.py.
 
-[ insert matching of rule based to gold labels ]
 
-Due to these flaws, we choose to train the system on the gold labels provided in the dataset.
 
 ## Description of the classification task for argument classification:
 The argument classification task is a task which concernes the characterization of events. In order to do so, predicate(s) of a sentence need to be identified. A predicate is the main token that establishes 'what' took place. Other information, such as 
 'who', 'where', 'when' to 'whom' provide more information about the event, and therefore it's important to be able to identify them. So the primary task is to identify the predicates and the associated arguments (either participants or properties). After this is done, a system will be trained on the identified labels which kcan be tested on new test data. 
 
 ## List of features: 
-Some features are already present in our dataset, such as dependencies, lemma, POS tag, XPOS tags. 
+Some features are already present in our dataset, such as dependencies, lemma, univeral pos-tag, and specific POS tags (XPOS). 
 
 Based on previous research, we propose to add the following features (Marquez et al, 2008):
 
@@ -31,8 +29,8 @@ Lexical features:
 - Children of token:
 In order to identify which possible arguments a token and possible predicate takes, we want to add children as a lexical feature. By using SpaCy, we labeled all possible children of a token, and added this to the dataset. 
 
-- Head of token:
-In order to identify which possible predicate a token has, we want to add the tokens head as a lexical feature. By using SpaCy, we labeled all possible heads of a token, and added this to the dataset. 
+- distance to predicate (in our dataset called head):
+In order to identify the distance from the predicate a token has. The system could pick up possible patterns showing that certain arguments are closer to the predicate compared to others.
 
 - Named entity labels:
 Labeling named entities can help to identify a role of a token such as person or organization. This information can help to identify easily is something is a specific argument, since arguments can denote an agent, or patient or location (Gübür, 2021).
