@@ -14,16 +14,16 @@ Based on the predicates, arguments need to be identified. For the rule based app
 
 This approach is a simple way of extracting predicates and arguments. Unfortunately, it isn't flawless since rules are hard coded which does not provide space for exceptions. We found that some predicates had a different dependency label, which results in overlooking that predicate. Another problem was labeling incorrect predicates or arguments based on the rules. Replicating this approach can be done by running predicates_from_dependency.py.
 
-[ insert matching of rule based to gold labels ]
+** Needs to be rewritten since things changed compared to the first week(s)
 
-Due to these flaws, we choose to train the system on the gold labels provided in the dataset.
+
 
 ## Description of the classification task for argument classification:
 The argument classification task is a task which concernes the characterization of events. In order to do so, predicate(s) of a sentence need to be identified. A predicate is the main token that establishes 'what' took place. Other information, such as 
 'who', 'where', 'when' to 'whom' provide more information about the event, and therefore it's important to be able to identify them. So the primary task is to identify the predicates and the associated arguments (either participants or properties). After this is done, a system will be trained on the identified labels which kcan be tested on new test data. 
 
 ## List of features: 
-Some features are already present in our dataset, such as dependencies, lemma, POS tag, XPOS tags. 
+Some features are already present in our dataset, such as dependencies, lemma, univeral pos-tag, and specific POS tags (XPOS). 
 
 Based on previous research, we propose to add the following features (Marquez et al, 2008):
 
@@ -31,8 +31,8 @@ Lexical features:
 - Children of token:
 In order to identify which possible arguments a token and possible predicate takes, we want to add children as a lexical feature. By using SpaCy, we labeled all possible children of a token, and added this to the dataset. 
 
-- Head of token:
-In order to identify which possible predicate a token has, we want to add the tokens head as a lexical feature. By using SpaCy, we labeled all possible heads of a token, and added this to the dataset. 
+- distance to predicate (in our dataset called head):
+In order to identify the distance from the predicate a token has. The system could pick up possible patterns showing that certain arguments are closer to the predicate compared to others.
 
 - Named entity labels:
 Labeling named entities can help to identify a role of a token such as person or organization. This information can help to identify easily is something is a specific argument, since arguments can denote an agent, or patient or location (Gübür, 2021).
@@ -46,7 +46,14 @@ This feature is already provided in the dataset. It is a useful feature which in
 
 ## Choice of Machine learning algorithm:
 
+### Rule-based?
+
+
+### SVM
+
 The system which is used is the Support Vector Machine (SVM), which is a supervised learning model that can deal with a large number of data and features. It is a system can be used for classification tasks where the system tries to find the best seperation line (also called hyperplane) between datapoints of classes. Other research (Hacioglu, 2004; Pradhan et al, 2005) has shown that SVM was a good system to use, and therefore we want to use it as well in combination with our extracted features. 
+
+### LSTM
 
 For a second system, we will make use of a LSTM neural network based on AllenNLP. This system makes use of three main concepts, the DatasetReader, Model and Trainer, and the Predictor.  
 
@@ -58,6 +65,14 @@ The Model and Trainer component will take as input a batch of Instances. First, 
 he model will combine word-level features into a document level feature vector. Then it classifies and classify that vector into one of the labels, which will be the expected output. Lastly, each single feature vector is classified as a label which provides some information about the probability distribution of the labels. 
 
 The predictor takes as input the vector for each instance in a batch and predicts a label for it. The output is expected to be a score for each possible label and the computed loss. 
+
+# Evaluation:
+After running evaluation.py, one can see precision, recall and F-scores for each argument class and predicates. The macro-average weight shows a performance of 0.457 (F-score). Recall is 0.62, which means that 62% of relevant items were retrieved. Precision, however, is 0.40 which means that of the retrieved elements 40% is classified correctly. 
+
+### Error analysis test set:
+
+
+
 
 
 ### References:
