@@ -122,7 +122,8 @@ def is_predicate(row, predicates_in_sentence):
         predicates_in_sentence.append(row[0])
         return True, predicates_in_sentence
     elif (predicates_in_sentence and (row[7] in ['xcomp', 'ccomp', 'parataxis', 'advcl'] or (row[7] == 'conj' and row[3] == 'VERB') \
-        or (row[7]) == 'conj' and row[6] ) and row[6] in predicates_in_sentence) or (row[3] == 'AUX' and row[4] in ['VBD', 'VBZ', 'VBN', 'VBP', 'VB']):
+        or (row[7]) == 'conj' and row[6] ) and row[6] in predicates_in_sentence) or (row[3] == 'AUX' and row[4] in ['VBD', 'VBZ', 'VBN', 'VBP', 'VB', 'VBG'])\
+            or ('acl' in row[7] and row[3] == 'VERB'):
         predicates_in_sentence.append(row[0])
         return True, predicates_in_sentence
     return False, predicates_in_sentence
@@ -403,3 +404,33 @@ pred_path =r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\
 #add_features(sq_path)
 preprocess_predicates(feature_path)
 preprocess_args(pred_path)
+
+
+def evaluate_correct_predicates(conll_file):
+    conll_object = read_in_conll_file(conll_file)
+    identified = 0
+    missed = 0
+    for row in conll_object:
+        if len(row) > 0:
+            if row[-1] == 'PREDICATE' and row[11] != 'O':
+                identified +=1 
+            elif row[-1] == 'PREDICATE':
+                missed +=1
+    print('Nr of predicates found:', identified)
+    print('Nr of predicates missed:', missed)
+
+def evaluate_correct_arguments(conll_file):
+    conll_object = read_in_conll_file(conll_file)
+    identified = 0
+    missed = 0
+    for row in conll_object:
+        if len(row) > 0:
+            if 'ARG' in row[-1] and row[12] != 'O':
+                identified +=1 
+            elif 'ARG' in row[-1]:
+                missed +=1
+    print('Nr of arguments found:', identified)
+    print('Nr of arguments missed:', missed)
+
+evaluate_correct_predicates(pred_path)
+evaluate_correct_arguments(r"C:\Users\Tessel Wisman\Documents\TextMining\NLPTech\UP_English-EWT\en_ewt-up-dev-s-final.conllu")
