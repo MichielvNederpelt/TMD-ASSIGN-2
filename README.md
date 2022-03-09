@@ -57,6 +57,11 @@ he model will combine word-level features into a document level feature vector. 
 
 The predictor takes as input the vector for each instance in a batch and predicts a label for it. The output is expected to be a score for each possible label and the computed loss. 
 
+# Evaluation:
+
+
+
+
 
 ### References:
 - Màrquez, L., Carreras, X., Litkowski, K. C., & Stevenson, S. (2008). Semantic role labeling: an introduction to the special issue. Computational linguistics, 34(2), 145-159.
