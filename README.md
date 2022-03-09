@@ -48,7 +48,16 @@ This feature is already provided in the dataset. It is a useful feature which in
 
 The system which is used is the Support Vector Machine (SVM), which is a supervised learning model that can deal with a large number of data and features. It is a system can be used for classification tasks where the system tries to find the best seperation line (also called hyperplane) between datapoints of classes. Other research (Hacioglu, 2004; Pradhan et al, 2005) has shown that SVM was a good system to use, and therefore we want to use it as well in combination with our extracted features. 
 
-For a second system, we will make use of a LSTM neural network....
+For a second system, we will make use of a LSTM neural network based on AllenNLP. This system makes use of three main concepts, the DatasetReader, Model and Trainer, and the Predictor.  
+
+The DatasetReader component basically does what it says, its function is in its name. It is the component of the pipeline that allows the raw (input) data format to be in a readable, or processable, format for later steps in the pipeline. In its most basic form, the component separates the (Instance) object into a minimum of two fields. The first is the token/text snippet, sentence etc. which needs to be classified (TextField) from the labels that it should classify (gold label) (LabelField). The Fields into which the data is separated can either be input or output. The fields will be converted to Tensors which will then be fed to the model. 
+For training one would like to have instances separated in input fields and the labels used for prediction (the output fields). For the Semantic role labeling task, the input will be sequence of words, BIO labels and the predicate senses with the position they take and XPOS tag. The expected output will be a list of classification instances represented as tensors.
+
+The Model and Trainer component will take as input a batch of Instances. First, the model converts the tokens into a vector. This will create a large tensor since each token is vectorized. In order to create smaller vectors, a sequence of vectors for each token is squased into a single vector.
+
+he model will combine word-level features into a document level feature vector. Then it classifies and classify that vector into one of the labels, which will be the expected output. Lastly, each single feature vector is classified as a label which provides some information about the probability distribution of the labels. 
+
+The predictor takes as input the vector for each instance in a batch and predicts a label for it. The output is expected to be a score for each possible label and the computed loss. 
 
 
 ### References:
@@ -57,3 +66,4 @@ For a second system, we will make use of a LSTM neural network....
 - Pradhan, S., Ward, W., Hacioglu, K., Martin, J. H., & Jurafsky, D. (2005, June). Semantic role labeling using different syntactic views. In Proceedings of the 43rd Annual Meeting of the Association for Computational Linguistics (ACL’05) (pp. 581-588).
 - Support vector machines: The linearly separable case. (z.d.). nlp stanford. Geraadpleegd op 28 februari 2022, van https://nlp.stanford.edu/IR-book/html/htmledition/support-vector-machines-the-linearly-separable-case-1.html
 - Gübür, K. T. (2021, 19 juli). Named Entity Recognition: Definition, Examples, and Guide. Holistic SEO. Geraadpleegd op 28 februari 2022, van https://www.holisticseo.digital/theoretical-seo/named-entity-recognition/
+- Training and prediction ·. (z.d.). A Guide to Natural Language Processing With AllenNLP. Geraadpleegd op 9 maart 2022, van https://guide.allennlp.org/training-and-prediction/
