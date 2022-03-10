@@ -15,6 +15,10 @@ This script will train the SVM classifier and test it on the test data.
 This script will compare the predictions made by the classifier with the gold data.
 Also, it shows the an evaluation on the extraction of predicates and arguments (compared to the gold data) to detect if extracts these properly.
 
+- step 4: Run conll_to_json
+This script will split the sentences into a number of different dictionary representations in a to be created conll file depending on the number of predicates in the sentence. The sentence, per predicate, will show a dictionary with seqeunce of words, BIO-representation of tokens and predicate_sense as keys.
+To run on different files (than develop and train) adjust list at the bottom of the script and run.
+
 ## Description of predicate and argument extraction:
 
 First, the dataset (Universal proposition banks)  was preprocessed in such a way that all predicates and arguments were found. This was done by counting all the extra columns in our dataset, which denote an extra predicate. Then, the sentence was duplicated the same amount of times as the previous count. Each duplicated sentence focused on a seperate predicate and it's arguments. 
@@ -70,7 +74,7 @@ For training one would like to have instances separated in input fields and the 
 
 The Model and Trainer component will take as input a batch of Instances. First, the model converts the tokens into a vector. This will create a large tensor since each token is vectorized. In order to create smaller vectors, a sequence of vectors for each token is squased into a single vector.
 
-he model will combine word-level features into a document level feature vector. Then it classifies and classify that vector into one of the labels, which will be the expected output. Lastly, each single feature vector is classified as a label which provides some information about the probability distribution of the labels. 
+The model will combine word-level features into a document level feature vector. Then it classifies that vector into one of the labels, which will be the expected output. Lastly, each single feature vector is classified as a label which provides some information about the probability distribution of the labels. 
 
 The predictor takes as input the vector for each instance in a batch and predicts a label for it. The output is expected to be a score for each possible label and the computed loss. 
 
