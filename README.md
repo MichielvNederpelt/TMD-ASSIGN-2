@@ -83,8 +83,9 @@ After running evaluation.py, one can see precision, recall and F-scores for each
 
 ### Error analysis test set:
 
-
-
+| TOKEN | UPOS | XPOS | Dependency | Gold | Predicted 
+------------------------------------------------------
+|
 
 
 ### References:
