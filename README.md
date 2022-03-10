@@ -87,6 +87,8 @@ After running evaluation.py, one can see precision, recall and F-scores for each
 |:---:| :---:|:---:|:---:|:---:|:---:|:---:|
 | 1| they | PRON | PRP| nsubj | ARG0| ARG0 |
 | 2| Syria | PROPN | NNP| nsubj | ARG0| ARG0 |
+| 3| I | PRON | PRP| nsubj | O | ARG0 |
+| 4| Them | PRON | PRP| obl | ARG2| ARG0 |
 
 ### References:
 - Màrquez, L., Carreras, X., Litkowski, K. C., & Stevenson, S. (2008). Semantic role labeling: an introduction to the special issue. Computational linguistics, 34(2), 145-159.
