@@ -7,6 +7,16 @@
 The Github is structured as follows:
 
 - ReadMe
+- RB_ML_NLP_TECH
+  - code
+    - system.py
+    - preprocess.py
+    - evaluation.py
+  - models?
+    -   x   
+    -   x
+    -   x
+    -   x 
 - NN_code_NLP_TECH
   - Data
     -   xsrl_univprop_en.dev.conll
@@ -21,16 +31,7 @@ The Github is structured as follows:
     - srl_reader.py
   - srl_main.py
 
-- RB_ML_NLP_TECH
-  - code
-    - system.py
-    - preprocess.py
-    - evaluation.py
-  - models?
-    -   x   
-    -   x
-    -   x
-    -   x 
+
 
 Requirements to run the scripts:
 
