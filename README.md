@@ -42,28 +42,28 @@ Requerements to run the scripts:
 
 - Preprocess.py
   - Spacy
-   - download en_core_web_sm (conda install -c conda-forge spacy-model-en_core_web_sm)
+    - download en_core_web_sm (conda install -c conda-forge spacy-model-en_core_web_sm)
   - numpy
   - csv
 
 - System.py
- - sklearn (pip install -U scikit-learn)
- - pandas
- - numpy
- - csv
- - collections
- - os
- - random
- - sys
+  - sklearn (pip install -U scikit-learn)
+  - pandas
+  - numpy
+  - csv
+  - collections
+  - os
+  - random
+  - sys
 
 - Evaluation.py
- - sys
- - pandas
- - os
- - collections
- - glob
- - sklearn
- - csv
+  - sys
+  - pandas
+  - os
+  - collections
+  - glob
+  - sklearn
+  - csv
 
 Overview of how to run the scripts:
 - Step 1: Run preprocess.py. 
