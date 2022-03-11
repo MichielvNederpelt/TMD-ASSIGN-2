@@ -35,6 +35,14 @@ The Github is structured as follows:
   -   x
   -   x 
 
+Requerements to run the scripts:
+
+- x
+- x
+- x
+- x
+- x
+- x
 
 Overview of how to run the scripts:
 - Step 1: Run preprocess.py. 
