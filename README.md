@@ -41,29 +41,21 @@ The Github is structured as follows:
 Requirements to run the scripts:
 
 - Preprocess.py
-  - Spacy
-    - download en_core_web_sm (conda install -c conda-forge spacy-model-en_core_web_sm)
-  - numpy
-  - csv
+This scripts needs three modules to run. SpaCy (en_core_web_sm); the csv module and NumPy
 
 - System.py
-  - sklearn (pip install -U scikit-learn)
-  - pandas
-  - numpy
-  - csv
-  - collections
-  - os
-  - random
-  - sys
+In order to run this script, one needs the following modules and packages: sklearn, pandas, NumPy, csv, collections, os, random and sys.
 
 - Evaluation.py
-  - sys
-  - pandas
-  - os
-  - collections
-  - glob
-  - sklearn
-  - csv
+Requirements for this script are: sys, pandas, os, collections, glob, sklearn and csv.
+
+- Conll_to_json.py
+Necessary packages and modules are: json, collections and csv.
+
+- srl scripts (BERT, lstm, predictor and reader):
+Necessary packages and modules are: warnings, typing, torch, transformers, allennlp-models, SpaCy, NumPy, logging and json.
+In order to run this scripts, one needs to have access to a Mac computer. Allennlp does not work on windows.
+
 
 Overview of how to run the scripts:
 - Step 1: Run preprocess.py. 
