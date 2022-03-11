@@ -19,6 +19,10 @@ Also, it shows the an evaluation on the extraction of predicates and arguments (
 This script will split the sentences into a number of different dictionary representations in a to be created conll file depending on the number of predicates in the sentence. The sentence, per predicate, will show a dictionary with seqeunce of words, BIO-representation of tokens and predicate_sense as keys.
 To run on different files (than develop and train) adjust list at the bottom of the script and run.
 
+-step 5: run srl_main.py
+to run this script the AllenNLP model should be downloaded: follow steps described here to download: https://github.com/allenai/allennlp/blob/main/README.md#installing-via-pip
+Unfortunatly in our project installing AllenNLP did not go as planned (mac was unable to install certain wheels) thus the code was not properly run on the data and the LSTM was not trained. However all functions are described and relative paths are in place so when the installment has succeeded the script should be ready to run. 
+
 ## Description of the classification task for argument classification:
 The argument classification task is a task which concernes the characterization of events. In order to do so, predicate(s) of a sentence need to be identified. A predicate is the main token that establishes 'what' took place. Other information, such as 
 'who', 'where', 'when' to 'whom' provide more information about the event, and therefore it's important to be able to identify them. So the primary task is to identify the predicates and the associated arguments (either participants or properties). After this is done, a system will be trained on the identified labels which can be tested on new test data.
