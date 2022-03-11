@@ -4,6 +4,38 @@
 - Tessel Wisman
 - Michiel van Nederpelt
 
+The Github is structured as follows:
+
+- ReadMe
+
+
+- NN_NLP_TECH
+  - Data
+  -   x
+  -   x
+  -   x
+  -   x
+  - Tools
+  -   x
+  -   x
+  -   x
+  -   x
+  - srl_main.py
+
+
+- RB_ML_NLP_TECH
+  - code
+  -   x
+  -   x
+  -   x
+  -   x
+  - data
+  -   x   
+  -   x
+  -   x
+  -   x 
+
+
 Overview of how to run the scripts:
 - Step 1: Run preprocess.py. 
 This script preprocesses the original file into several files, adding features and extracting predicates and arguments via a rule-based approach.
