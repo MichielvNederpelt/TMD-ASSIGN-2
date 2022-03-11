@@ -4,7 +4,7 @@
 - Tessel Wisman
 - Michiel van Nederpelt
 
-overview of how to run the scripts:
+Overview of how to run the scripts:
 - Step 1: Run preprocess.py. 
 This script preprocesses the original file into several files, adding features and extracting predicates and arguments via a rule-based approach.
 
