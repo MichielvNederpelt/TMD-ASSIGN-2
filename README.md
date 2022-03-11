@@ -9,18 +9,21 @@ The Github is structured as follows:
 - ReadMe
 
 
-- NN_NLP_TECH
+- NN_code_NLP_TECH
   - Data
-  -   x
-  -   x
-  -   x
-  -   x
+    -   xsrl_univprop_en.dev.conll
+    -  srl_univprop_en.dev.jsonl
+    - srl_univprop_en.train.conll
+    - srl_univprop_en.train.jsonl
+
   - Tools
-  -   x
-  -   x
-  -   x
-  -   x
-  - srl_main.py
+    - conll_to_json.py
+    - srl_model_bert.py
+    - srl_model_lstm.py
+    - srl_predictor.py
+    - srl_reader.py
+ 
+ - srl_main.py
 
 
 - RB_ML_NLP_TECH
