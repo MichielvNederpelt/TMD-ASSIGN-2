@@ -36,7 +36,7 @@ The Github is structured as follows:
   - srl_main.py
 
 
-## Reguirements
+## Requirements
 Requirements to run the scripts:
 
 - Preprocess.py:
