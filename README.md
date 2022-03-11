@@ -13,10 +13,13 @@ The Github is structured as follows:
     - preprocess.py
     - evaluation.py
   - models?
-    -   x   
-    -   x
-    -   x
-    -   x 
+    -   model93-devset.conllu   
+    -   model93-testset.conllu
+    -   model1512.conllu
+    -   model830859.conllu
+    -   model831648.conllu
+    -   model831711.conllu
+    -   model931343.conllu
 - NN_code_NLP_TECH
   - Data
     -   xsrl_univprop_en.dev.conll
