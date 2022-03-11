@@ -31,7 +31,7 @@ In order to extract predicates, a rule-based approach was used by looking at dep
 
 Based on the predicates, arguments need to be identified. For the rule based approach, three classes of arguments were categorized. ARG0 is assigned to the subject, ARG1 is assigned to the object and ARG2 to other arguments such as time or date. We used the dependency label to identify these arguments. Using the dependency label, arguments consisting of nsubj, obj or obl were identified as arguments. 
 
-This approach is a simple way of extracting predicates and arguments. Unfortunately, it isn't flawless since rules are hard coded which does not provide space for exceptions. We found that some predicates had a different dependency label, which results in overlooking that predicate. Another problem was labeling incorrect predicates or arguments based on the rules. Replicating this approach can be done by running predicates_from_dependency.py. These flaws will also flow through the experiments. 
+This approach is a simple way of extracting predicates and arguments. Unfortunately, it isn't flawless since rules are hard coded which does not provide space for exceptions. We found that some predicates had a different dependency label, which results in overlooking that predicate. Most of the time, predicates are verbs, and therefore we accounted for verbs to be roots. But some predicates were nouns, which means that these were not extracted. Another problem was labeling incorrect predicates or arguments based on the rules. for instance, we coded the dependency label 'obl' to be an argument indicator for ARG2. But not all 'obl' instances are an argument, or they are a different argument type. Replicating this approach can be done by running predicates_from_dependency.py. These flaws will also flow through the experiments. 
 
 ## List of features: 
 Some features are already present in our dataset, such as dependencies, lemma, univeral pos-tag, and specific POS tags (XPOS). 
@@ -80,7 +80,7 @@ After running evaluation.py, one can see precision, recall and F-scores for each
 A part can be explained by our rule-based approach. The rules were sufficient for extracting predicates, which has an F-score of 0.838. Unfortunately, the rules were not sufficient enough to detect and extract all arguments, which makes it of course also more difficult to predict them when information is missing for the system.
 
 ### Error analysis test set:
-
+In the table below, some examples of correct and incorrect predicted labels are displayed. Please note that this is only a fraction. 
 Example 1 and 2 show two cases in which the argument was correctly predicted as an ARG0. In example 3 and 4, the tokens were labeled as ARG0 arguments, whereas they were in fact different. Compared to row 1 and 2, they have in common that the UPOS and XPOS are also a pronoun and PRP. This indicated that the system might think that such a combination is an indication of an ARG0. Taking into account example 5 and 6, the system also sometimes does not recognize an ARG0. In case of example 5, it might be due to the fact that the combination of UPOS and XPOS is more indicative of an ARGM instead of an ARG0. Example 7 shows a correctly predicted ARGM with similar features to example 5. Example 6 has both UPOS and XPOS in common with the correct examples, but the dependency is different. 
 This indicates that the system is very keen on specific feature combinations as patterns. However, there are a lot of exceptions which cannot be detected due to the current system. Especially in cases where there are few examples (such as ARG3 and ARG4 and ARG5). 
 
@@ -93,6 +93,8 @@ This indicates that the system is very keen on specific feature combinations as 
 | 5| Message | NOUN | NN| obl | ARG0| ARGM |
 | 6| Muhsin | PROPN | NNP| obl | ARG0| ARGM|
 | 7| Attempts | NOUN | NNS| obl | ARGM| ARGM |
+
+Although not displayed, the same patterns can be seen for the other arguments. Patterns that consist of specific pos tag combinations together with the dependency label that pushes the system to a certain prediction. Exceptions are not strong enough to push the system to another possible choice. Therefore, we would recommend to add some more contextual features, such as word embeddings or syntactic n-grams.  
 
 ### References:
 - Màrquez, L., Carreras, X., Litkowski, K. C., & Stevenson, S. (2008). Semantic role labeling: an introduction to the special issue. Computational linguistics, 34(2), 145-159.
