@@ -38,7 +38,7 @@ The Github is structured as follows:
   -   x
   -   x 
 
-Requerements to run the scripts:
+Requirements to run the scripts:
 
 - Preprocess.py
   - Spacy
