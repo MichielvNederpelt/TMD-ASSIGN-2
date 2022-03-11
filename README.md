@@ -23,15 +23,11 @@ To run on different files (than develop and train) adjust list at the bottom of 
 
 First, the dataset (Universal proposition banks)  was preprocessed in such a way that all predicates and arguments were found. This was done by counting all the extra columns in our dataset, which denote an extra predicate. Then, the sentence was duplicated the same amount of times as the previous count. Each duplicated sentence focused on a seperate predicate and it's arguments. 
 
-In order to extract predicates, a rule-based approach was used by looking at dependency labels. We identified predicates when having the following dependency label: 'root', 'xcomp', 'ccomp', 'parataxis', 'advcl' or 'conj' with VERB as part-of-speech tag.
+In order to extract predicates, a rule-based approach was used by looking at dependency labels. We identified predicates when having the following dependency label: 'root', 'xcomp', 'ccomp', 'parataxis', 'advcl' or 'conj' with VERB as part-of-speech tag. Also, predicates were extracted if they had an UPOS of AUX, in combination with an XPOS of VBD, VBZ, VBN, VBP, VB or VBG.
 
-Based on the predicates, arguments need to be identified. For the rule based approach, three classes of arguments were categorized. ARG0 is assigned to the subject, ARG1 is assigned to the object and ARG2 to other arguments such as time or date. We used the dependency label to identify these arguments. If the dependency label was 'nsubj', we assigned it ARG0. If the dependency label was 'obj', ARG1 was assigned. Lastly, for the dependency label 'obl' ARG2 was assigned. 
+Based on the predicates, arguments need to be identified. For the rule based approach, three classes of arguments were categorized. ARG0 is assigned to the subject, ARG1 is assigned to the object and ARG2 to other arguments such as time or date. We used the dependency label to identify these arguments. Using the dependency label, arguments consisting of nsubj, obj or obl were identified as arguments. 
 
-This approach is a simple way of extracting predicates and arguments. Unfortunately, it isn't flawless since rules are hard coded which does not provide space for exceptions. We found that some predicates had a different dependency label, which results in overlooking that predicate. Another problem was labeling incorrect predicates or arguments based on the rules. Replicating this approach can be done by running predicates_from_dependency.py.
-
-** Needs to be rewritten since things changed compared to the first week(s)
-
-
+This approach is a simple way of extracting predicates and arguments. Unfortunately, it isn't flawless since rules are hard coded which does not provide space for exceptions. We found that some predicates had a different dependency label, which results in overlooking that predicate. Another problem was labeling incorrect predicates or arguments based on the rules. Replicating this approach can be done by running predicates_from_dependency.py. These flaws will also flow through the experiments. 
 
 ## Description of the classification task for argument classification:
 The argument classification task is a task which concernes the characterization of events. In order to do so, predicate(s) of a sentence need to be identified. A predicate is the main token that establishes 'what' took place. Other information, such as 
