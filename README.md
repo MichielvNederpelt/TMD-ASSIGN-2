@@ -41,10 +41,10 @@ The Github is structured as follows:
 Requerements to run the scripts:
 
 - Preprocess.py
- - Spacy
-  - download en_core_web_sm (conda install -c conda-forge spacy-model-en_core_web_sm)
- - numpy
- - csv
+  - Spacy
+   - download en_core_web_sm (conda install -c conda-forge spacy-model-en_core_web_sm)
+  - numpy
+  - csv
 
 - System.py
  - sklearn (pip install -U scikit-learn)
