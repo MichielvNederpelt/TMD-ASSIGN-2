@@ -4,6 +4,7 @@
 - Tessel Wisman
 - Michiel van Nederpelt
 
+## Github structure
 The Github is structured as follows:
 
 - ReadMe
@@ -35,7 +36,7 @@ The Github is structured as follows:
   - srl_main.py
 
 
-
+## Reguirements
 Requirements to run the scripts:
 
 - Preprocess.py:
@@ -54,7 +55,7 @@ Necessary packages and modules are: json, collections and csv.
 Necessary packages and modules are: warnings, typing, torch, transformers, allennlp-models, SpaCy, NumPy, logging and json.
 In order to run this scripts, one needs to have access to a Mac computer. Allennlp does not work on windows.
 
-
+## How to run the scripts
 Overview of how to run the scripts:
 - Step 1: Run preprocess.py. 
 This script preprocesses the original file into several files, adding features and extracting predicates and arguments via a rule-based approach.
