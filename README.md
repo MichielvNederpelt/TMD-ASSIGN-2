@@ -97,7 +97,7 @@ Lexical features:
 - Lemma: a lemma can be a helpful feature to disambiguate between different word senses. The word 'broke' could mean break in the past tense, or a state of poverty for a person.
 
 - UPOS (universal POS tag) and XPOS (specific POS tag): 
-POS tags can be helpful features to disambiguate between different words. If we take the same example, the word 'broke' could mean break and then it would be a VERB, or a state of poverty for a person so an adjective (ADJ).
+POS tags can be helpful features to disambiguate between different words. If we take the same example, the word 'broke' could mean break and then it would be a VERB, or a state of poverty for a person so an adjective (ADJ). In order to make the distinction, a system needs to have these features. 
 
 - Children of token:
 In order to identify which possible arguments a token and possible predicate takes, we want to add children as a lexical feature. By using SpaCy, we labeled all possible children of a token, and added this to the dataset. 
