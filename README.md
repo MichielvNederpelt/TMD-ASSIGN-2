@@ -23,10 +23,9 @@ The Github is structured as follows:
 
 - RB_ML_NLP_TECH
   - code
-    -   x
-    -   x
-    -   x
-    -   x
+    - system.py
+    - preprocess.py
+    - evaluation.py
   - models?
     -   x   
     -   x
