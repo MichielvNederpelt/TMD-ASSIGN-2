@@ -40,16 +40,16 @@ The Github is structured as follows:
 
 Requirements to run the scripts:
 
-- Preprocess.py
+- Preprocess.py:
 This scripts needs three modules to run. SpaCy (en_core_web_sm); the csv module and NumPy
 
-- System.py
+- System.py:
 In order to run this script, one needs the following modules and packages: sklearn, pandas, NumPy, csv, collections, os, random and sys.
 
-- Evaluation.py
+- Evaluation.py:
 Requirements for this script are: sys, pandas, os, collections, glob, sklearn and csv.
 
-- Conll_to_json.py
+- Conll_to_json.py:
 Necessary packages and modules are: json, collections and csv.
 
 - srl scripts (BERT, lstm, predictor and reader):
